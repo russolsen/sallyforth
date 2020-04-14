@@ -1,5 +1,4 @@
-SallyForth: A simple Forth-like language implemented in Python.
-##############################################################
+# SallyForth: A simple Forth-like language implemented in Python.
 
 SallyForth is a simple hobby implementation of the FORTH programming
 language. Possibly the most interesting thing about SallyForth is the
