@@ -1,0 +1,10 @@
+"Executing " . *source* . nl
+
+: prompt "Yo> " ;
+
+: hello (simple greeting) "Hello" . nl ;
+
+: >0 0 > ;
+: <0 0 < ;
+
+: p dup . nl ;

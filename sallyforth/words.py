@@ -1,4 +1,5 @@
 from compiler import Compiler
+import importlib
 
 def execute_f(name, instructions):
     # print("execute_f:", len(instructions))
@@ -31,6 +32,17 @@ def const_f(value):
         f.stack.push(value)
         return 1
     return x
+
+def w_import(f):
+    name = f.stack.pop()
+    m = importlib.import_module(name)
+    f.stack.push(m)
+
+def w_def(f):
+    value = f.stack.pop()
+    name = f.stack.pop()
+    f.defvar(name, value)
+    print('name', name, 'value', value)
 
 def w_gt(f):
     a = f.stack.pop()
