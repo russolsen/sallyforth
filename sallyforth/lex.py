@@ -1,4 +1,5 @@
 import sys
+import readline
 from os import path
 
 def is_string(token):
@@ -14,7 +15,13 @@ def tokenize(s):
     tokens = []
     for ch in s:
         #print(f'Loop state {state} token {token} ch {ch}')
-        if state == 'start' and is_space(ch):
+        if state == 'start' and ch == '(':
+            state = 'comment'
+        elif state == 'comment' and ch == ')':
+            state = 'start'
+        elif state == 'comment':
+            continue
+        elif state == 'start' and is_space(ch):
             continue
         elif state == 'start' and ch == '"':
             token = ch
@@ -38,9 +45,6 @@ def tokenize(s):
     if len(token) > 0:
         tokens.append(token)
     return tokens
-
-def read_ch():
-    return sys.stdin.read(1)
 
 def read_tokens(read_f):
     line = read_f()
