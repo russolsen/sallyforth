@@ -1,5 +1,45 @@
 from compiler import Compiler
 import importlib
+from inspect import isfunction, isbuiltin
+
+def const_f(value):
+    def x(f):
+        f.stack.push(value)
+        return 1
+    return x
+
+def native_function_handler(func):
+    def handle(forth):
+        args = forth.stack.pop()
+        result = func(*args)
+        forth.stack.push(result)
+        return 1
+    return handle
+
+def import_native_module(forth, m, alias=None, excludes=[]):
+    if not alias:
+        alias = m.__name__
+    raw_names = dir(m)
+    names = [x for x in raw_names if x not in excludes] 
+    for name in names:
+        localname = f'{alias}.{name}'
+        print(localname)
+        val = m.__getattribute__(name)
+        if isfunction(val) or isbuiltin(val):
+            forth.dictionary[localname] = native_function_handler(val)
+        else:
+            forth.dictionary[localname] = const_f(val)
+
+def w_require(f):
+    name = f.stack.pop()
+    m = importlib.import_module(name)
+    import_native_module(f, m, name)
+    return 1
+
+def w_source(f):
+    path = f.stack.pop()
+    f.execute_file(path)
+    return 1
 
 def execute_f(name, instructions):
     # print("execute_f:", len(instructions))
@@ -27,22 +67,98 @@ def ifnot_jump_f(n):
         return 1
     return ifnot_jump
 
-def const_f(value):
-    def x(f):
-        f.stack.push(value)
-        return 1
-    return x
+def jump_f(n):
+    def do_jump(forth):
+        return n
+    return do_jump
 
 def w_import(f):
     name = f.stack.pop()
     m = importlib.import_module(name)
-    f.stack.push(m)
+    f.dictionary[name] = const_f(m)
+    return 1
+
+def w_px(f):
+    args = f.stack.pop()
+    print("args", args)
+    name = f.stack.pop()
+    print("name", name)
+    m = f.stack.pop()
+    print("mod:", m)
+    func = m.__dict__[name]
+    print("f:", f);
+    result = func(*args)
+    print("result", result)
+    f.stack.push(result)
+    return 1
+
+def w_list(f):
+    n = f.stack.pop()
+    l = []
+    for i in range(n):
+        l.append(f.stack.pop())
+    print(l)
+    f.stack.push(l)
+    return 1
+
+ListMarker = object()
+
+def w_startlist(f):   # [
+    f.stack.push(ListMarker)
+    return 1
+
+def w_endlist(f):    # ]
+    l = []
+    x = f.stack.pop()
+    while x != ListMarker:
+        l.append(x)
+        x = f.stack.pop()
+    l.reverse()
+    f.stack.push(l)
+    return 1
+
+MapMarker = object()
+
+def w_startmap(f):   # {
+    f.stack.push(MapMarker)
+    return 1
+
+def w_endmap(f):    # }
+    l = []
+    x = f.stack.pop()
+    while x != MapMarker:
+        l.append(x)
+        x = f.stack.pop()
+    if (len(l) % 2) != 0:
+        print("Maps need even number of entries.")
+        return 1
+    l.reverse()
+    result = {}
+    for i in range(0, len(l), 2):
+        result[l[i]] = l[i+1]
+    f.stack.push(result)
+    return 1
+
+def w_get(f):
+    name = f.stack.pop()
+    m = f.stack.pop()
+    result = m[name]
+    f.stack.push(result)
+    return 1
+
+def w_getattribute(f):
+    name = f.stack.pop()
+    x = f.stack.pop()
+    result = x.__getattribute__(name)
+    f.stack.push(result)
+    return 1
 
 def w_def(f):
     value = f.stack.pop()
     name = f.stack.pop()
     f.defvar(name, value)
     print('name', name, 'value', value)
+    return 1
 
 def w_gt(f):
     a = f.stack.pop()
@@ -108,6 +224,19 @@ def w_dup(f):
     f.stack.push(x)
     return 1
 
+def w_rot(f):
+    c = f.stack.pop()
+    b = f.stack.pop()
+    a = f.stack.pop()
+    f.stack.push(b)
+    f.stack.push(c)
+    f.stack.push(a)
+    return 1
+
+def w_drop(f):
+    f.stack.pop()
+    return 1
+
 def w_swap(f):
     a = f.stack.pop()
     b = f.stack.pop()
@@ -143,6 +272,7 @@ def w_if(forth):
     print("w_if")
     compiler = forth.compiler
     compiler.push_offset()
+    compiler.push_offset()
     compiler.add_instruction(w_should_not_happen)
     return 1
 
@@ -150,13 +280,30 @@ w_if.__dict__['immediate'] = True
 
 def w_then(forth):
     compiler = forth.compiler
+    else_offset = compiler.pop_offset()
     if_offset = compiler.pop_offset()
-    end_offset = compiler.offset()
-    delta = end_offset - if_offset
-    compiler.instructions[if_offset] = ifnot_jump_f(delta)
+    then_offset = compiler.offset()
+    if else_offset == if_offset:
+        delta = then_offset - if_offset
+        compiler.instructions[if_offset] = ifnot_jump_f(delta)
+    else:
+        if_delta = else_offset - if_offset + 1
+        compiler.instructions[if_offset] = ifnot_jump_f(if_delta)
+        else_delta = then_offset - else_offset
+        compiler.instructions[else_offset] = jump_f(else_delta)
     return 1
 
 w_then.__dict__['immediate'] = True
+
+
+def w_else(forth):
+    compiler = forth.compiler
+    compiler.pop_offset()
+    compiler.push_offset()
+    compiler.add_instruction(w_should_not_happen)
+    return 1
+
+w_else.__dict__['immediate'] = True
 
 def w_do(forth):
     print("w_do")
@@ -195,6 +342,7 @@ def w_until(forth):
 
 
 w_until.__dict__['immediate'] = True
+
 
 def w_dump(f):
     f.dump()

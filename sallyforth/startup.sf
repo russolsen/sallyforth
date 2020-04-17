@@ -1,10 +1,37 @@
 "Executing " . *source* . nl
 
-: prompt "Yo> " ;
+"time" require
+"math" require
+"sys" require
+"os" require
+"os.path" require
+"io" require
+
+: *prompt* "SF> " ;
+
+: [] ( -- <empty list>) [ ] ;
+
+: px0 (mod fname -- result) []  px ;
+: px1 (mod fname arg -- result) 1 ->list px ;
+: px2 (mod fname arg arg -- result) 2 ->list px ;
+: px3 (mod fname arg arg arg -- result) 3 ->list px ;
+
+: dir (mod -- keys) "dir" px0 ;
+: ctime [] time.ctime ;
+: sleep 1 ->list stack time.sleep drop ;
 
 : hello (simple greeting) "Hello" . nl ;
 
 : >0 0 > ;
 : <0 0 < ;
 
-: p dup . nl ;
+: p . nl ;
+: top dup p ;
+
+: source-if-exists 
+    dup 
+    1 ->list os.path.exists
+    if source else drop then
+;
+
+"init.sf" source-if-exists

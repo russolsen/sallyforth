@@ -1,6 +1,7 @@
 import sys
 from os import path
 from words import *
+import words
 from lex import forth_prompt, read_tokens, is_string, tokenize
 from stack import Stack
 
@@ -27,13 +28,16 @@ class Forth:
                 'true': const_f(True),
                 'false': const_f(False),
                 'nil': const_f(None),
-                'def': w_def,
-                'import': w_import,
                 '0': const_f(0),
                 '1': const_f(1),
                 '2': const_f(2),
                 ';': w_semi,
                 ':': w_colon,
+                '->list': w_list,
+                '[': w_startlist,
+                ']': w_endlist,
+                '{': w_startmap,
+                '}': w_endmap,
                 '+': w_add,
                 '+': w_add,
                 '-': w_sub,
@@ -43,21 +47,21 @@ class Forth:
                 '<=': w_le,
                 '>=': w_ge,
                 '=': w_eq,
-                'dup': w_dup,
-                'swap': w_swap,
-                '.': w_dot,
-                'nl': w_nl,
-                'dump': w_dump,
-                'idump': w_idump,
-                'stack': w_stack,
-                'begin': w_begin,
-                'until': w_until,
-                'if': w_if,
-                'then': w_then}
+                '.': w_dot}
+
+        self.import_from_module(words, 'w_')
 
         self.compiler = None
         if startup:
             execute_startup(startup)
+
+    def import_from_module(self, m, prefix):
+        names = dir(m)
+        prefix_len = len(prefix)
+        for name in names:
+            if name.startswith(prefix):
+                word_name = name[prefix_len::]
+                self.dictionary[word_name] = m.__getattribute__(name)
 
     def defvar(self, name, value):
         self.dictionary[name] = const_f(value)
@@ -81,6 +85,7 @@ class Forth:
                 self.compile_token(token)
 
     def execute_file(self, fpath):
+        old_source = self.dictionary.get('*source*', None)
         self.defvar('*source*', fpath)
         with open(fpath) as f:
             line = f.readline()
@@ -89,6 +94,7 @@ class Forth:
                 self.execute_tokens(tokens)
                 line = f.readline()
         self.defvar('*source*', '')
+        self.dictionary['*source*'] = old_source
 
     def compile_token(self, token):
         if self.compiler.name == None:
