@@ -1,22 +1,13 @@
 import os
 import sys
+import atexit
 from kernel import Forth
 from lex import tokenize
 import readline
 
 HistoryFile=".sallyforth"
 
-histfile = os.path.join(os.path.expanduser("~"), HistoryFile)
-
-try:
-    readline.read_history_file(histfile)
-except FileNotFoundError:
-    pass
-
-source_dir = os.path.dirname(os.path.abspath(__file__))
-startup_file = f'{source_dir}/startup.sf'
-
-f = Forth()
+hist_file = os.path.join(os.path.expanduser("~"), HistoryFile)
 
 class Completer:
     def __init__(self, f):
@@ -28,35 +19,53 @@ class Completer:
         except IndexError:
             return None
 
-completer = Completer(f)
-
-readline.parse_and_bind("tab: complete")
-readline.set_completer(completer.complete)
-
-f.defvar("argv", sys.argv[1::])
-
-if os.path.exists(startup_file):
-    f.execute_file(startup_file)
-
-while True:
-    p = f.evaluate_token('*prompt*')
+def setup_readline(history_path, f):
+    completer = Completer(f)
     try:
-        line = input(p)
-    except KeyboardInterrupt:
-        print("<<interrupt>>")
-        line = ''
-    except EOFError:
-        break
+        readline.read_history_file(history_path)
+    except FileNotFoundError:
+        pass
+    readline.parse_and_bind("tab: complete")
+    readline.set_completer(completer.complete)
+    def save_history():
+        readline.write_history_file(history_path)
+    atexit.register(save_history)
 
-    tokens = tokenize(line)
-    try:
-        f.execute_tokens(tokens)
-    except:
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        print("Error:", exc_type)
-        print("Error:", exc_value)
-        print("Error:", exc_traceback)
+def setup_forth():
+    f = Forth()
+    f.defvar("argv", sys.argv[1::])
 
-readline.write_history_file(histfile)
+    source_dir = os.path.dirname(os.path.abspath(__file__))
+    startup_file = f'{source_dir}/startup.sf'
 
-print("Bye!")
+    if os.path.exists(startup_file):
+        f.execute_file(startup_file)
+
+    return f
+
+def repl(f):
+    while True:
+        p = f.evaluate_token('*prompt*')
+        try:
+            line = input(p)
+        except KeyboardInterrupt:
+            print("<<interrupt>>")
+            line = ''
+        except EOFError:
+            break
+    
+        tokens = tokenize(line)
+        try:
+            f.execute_tokens(tokens)
+        except:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            print("Error:", exc_type)
+            print("Error:", exc_value)
+            print("Error:", exc_traceback)
+    
+
+if __name__ == "__main__":
+    f = setup_forth()
+    setup_readline(hist_file, f)
+    repl(f)
+    print("Bye!")
