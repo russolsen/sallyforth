@@ -24,7 +24,7 @@ class Forth:
     def __init__(self, startup=None):
         self.stack = Stack()
         self.dictionary = {
-                '*prompt*': const_f("SallyForth>> "),
+                '*prompt*': const_f('SallyForth>> '),
                 'true': const_f(True),
                 'false': const_f(False),
                 'nil': const_f(None),
@@ -108,9 +108,9 @@ class Forth:
         if token in self.dictionary:
             word = self.dictionary[token]
             if 'immediate' in word.__dict__:
-                #print("before immediate word:", self, self.dictionary)
+                #print('before immediate word:', self, self.dictionary)
                 word(self)
-                #print("after immediate word:", self, self.dictionary)
+                #print('after immediate word:', self, self.dictionary)
             else:
                 self.compiler.add_instruction(self.dictionary[token])
             return
@@ -118,7 +118,7 @@ class Forth:
         n = to_number(token)
         if n == None:
             self.compiler = None
-            print(token, "? Compile terminated.")
+            print(f'{token}? Compile terminated.')
         else:
             self.compiler.add_instruction(push_value_f(n))
 
@@ -133,12 +133,12 @@ class Forth:
 
         n = to_number(token)
         if n == None:
-            print(token, "?")
+            print(f'{token}?')
         else:
             self.stack.push(n)
 
     def dump(self):
-        print("Forth:", self)
-        print("Stack:", self.stack)
-        print("Dictionary:", self.dictionary)
-        print("Compiler:", self.compiler)
+        print('Forth:', self)
+        print('Stack:', self.stack)
+        print('Dictionary:', self.dictionary)
+        print('Compiler:', self.compiler)

@@ -3,11 +3,10 @@ import readline
 from os import path
 
 def is_string(token):
-    #print("is string:", token, token[0], token[0] == '"')
-    return token[0] == '"'
+    return token[0] == '"' or token[0] == "'"
 
 def is_space(ch):
-    return ch == " " or ch == "\t" or ch == "\n"
+    return ch == ' ' or ch == '\t' or ch == '\n'
 
 def tokenize(s):
     state = 'start'
@@ -23,12 +22,19 @@ def tokenize(s):
             continue
         elif state == 'start' and is_space(ch):
             continue
+        elif state == 'start' and ch == "'":
+            token = ch
+            state = 's_string'
         elif state == 'start' and ch == '"':
             token = ch
             state = 'string'
         elif state == 'start':
             token = ch
             state = 'word'
+        elif state == 's_string' and ch == "'":
+            tokens.append(token)
+            state = 'start'
+            token = ''
         elif state == 'string' and ch == '"':
             tokens.append(token)
             state = 'start'
@@ -37,7 +43,7 @@ def tokenize(s):
             tokens.append(token)
             state = 'start'
             token = ''
-        elif state == 'word' or state == 'string':
+        elif state == 'word' or state == 'string' or state == 's_string':
             token += ch
         else:
             print(f'State: [{state}] token: [{token}] ch: [{ch}]???')
@@ -51,7 +57,7 @@ def read_tokens(read_f):
     return tokenize(line)
 
 def forth_prompt():
-    return input("SallyForth>> ")
+    return input('SallyForth>> ')
 
 def file_read_f(f):
     def read_it():

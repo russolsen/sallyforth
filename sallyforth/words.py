@@ -23,7 +23,7 @@ def import_native_module(forth, m, alias=None, excludes=[]):
     names = [x for x in raw_names if x not in excludes] 
     for name in names:
         localname = f'{alias}.{name}'
-        print(localname)
+        #print(localname)
         val = m.__getattribute__(name)
         if isfunction(val) or isbuiltin(val):
             forth.dictionary[localname] = native_function_handler(val)
@@ -42,13 +42,13 @@ def w_source(f):
     return 1
 
 def execute_f(name, instructions):
-    # print("execute_f:", len(instructions))
+    # print('execute_f:', len(instructions))
     def inner(forth, debug=False):
-        # print("inner f:", name)
-        # print("inner f:", len(instructions))
+        # print('inner f:', name)
+        # print('inner f:', len(instructions))
         i = 0
         while i >= 0:
-            # print(i, "=>", instructions[i])
+            # print(i, '=>', instructions[i])
             delta = instructions[i](forth)
             i += delta
         return 1
@@ -56,14 +56,14 @@ def execute_f(name, instructions):
 
 def ifnot_jump_f(n):
     def ifnot_jump(forth):
-        # print("If not jump:")
+        # print('If not jump:')
         x = forth.stack.pop()
-        # print("==>value:", x)
+        # print('==>value:', x)
         if not x:
-            # print("==>", x, " is false")
-            # print("==>returning", n)
+            # print('==>', x, ' is false')
+            # print('==>returning', n)
             return n
-        # print("==>returning 1")
+        # print('==>returning 1')
         return 1
     return ifnot_jump
 
@@ -80,15 +80,15 @@ def w_import(f):
 
 def w_px(f):
     args = f.stack.pop()
-    print("args", args)
+    #print('args', args)
     name = f.stack.pop()
-    print("name", name)
+    #print('name', name)
     m = f.stack.pop()
-    print("mod:", m)
+    #print('mod:', m)
     func = m.__dict__[name]
-    print("f:", f);
+    #print('f:', f);
     result = func(*args)
-    print("result", result)
+    #print('result', result)
     f.stack.push(result)
     return 1
 
@@ -97,7 +97,7 @@ def w_list(f):
     l = []
     for i in range(n):
         l.append(f.stack.pop())
-    print(l)
+    #print(l)
     f.stack.push(l)
     return 1
 
@@ -130,7 +130,7 @@ def w_endmap(f):    # }
         l.append(x)
         x = f.stack.pop()
     if (len(l) % 2) != 0:
-        print("Maps need even number of entries.")
+        print('Maps need even number of entries.')
         return 1
     l.reverse()
     result = {}
@@ -157,7 +157,7 @@ def w_def(f):
     value = f.stack.pop()
     name = f.stack.pop()
     f.defvar(name, value)
-    print('name', name, 'value', value)
+    #print('name', name, 'value', value)
     return 1
 
 def w_gt(f):
@@ -265,11 +265,11 @@ def w_semi(forth):
 w_semi.__dict__['immediate'] = True
 
 def w_should_not_happen(forth):
-    print("Should not execute this word!")
+    print('Should not execute this word!')
     raise ValueError
 
 def w_if(forth):
-    print("w_if")
+    #print('w_if')
     compiler = forth.compiler
     compiler.push_offset()
     compiler.push_offset()
@@ -306,7 +306,7 @@ def w_else(forth):
 w_else.__dict__['immediate'] = True
 
 def w_do(forth):
-    print("w_do")
+    #print('w_do')
     compiler = forth.compiler
     compiler.push_offset()
     compiler.add_instruction(w_should_not_happen)
@@ -336,7 +336,7 @@ def w_until(forth):
     begin_offset = compiler.pop_offset()
     until_offset = compiler.offset()
     delta = begin_offset - until_offset
-    print("Delta:", delta)
+    #print('Delta:', delta)
     compiler.instructions.append(ifnot_jump_f(delta))
     return 1
 
@@ -355,6 +355,5 @@ def w_idump(f):
 w_idump.__dict__['immediate'] = True
 
 def w_stack(f):
-    print(f.stack)
+    print(f'Stack: <B[{f.stack}]T>')
     return 1
-
