@@ -14,12 +14,6 @@ def to_number(token):
         except ValueError:
             return None
 
-def push_value_f(value):
-    def x(f):
-        f.stack.push(value)
-        return 1
-    return x
-
 class Forth:
     def __init__(self, startup=None):
         self.stack = Stack()
@@ -38,6 +32,8 @@ class Forth:
                 ']': w_endlist,
                 '{': w_startmap,
                 '}': w_endmap,
+                '@@': w_lookup,
+                '!!': w_call,
                 '+': w_add,
                 '+': w_add,
                 '-': w_sub,
@@ -102,14 +98,14 @@ class Forth:
             return
 
         if is_string(token):
-            self.compiler.add_instruction(push_value_f(token[1::]))
+            self.compiler.add_instruction(const_f(token[1::]))
             return
 
         if token in self.dictionary:
             word = self.dictionary[token]
             if 'immediate' in word.__dict__:
                 #print('before immediate word:', self, self.dictionary)
-                word(self)
+                word(self, 0)
                 #print('after immediate word:', self, self.dictionary)
             else:
                 self.compiler.add_instruction(self.dictionary[token])
@@ -120,7 +116,7 @@ class Forth:
             self.compiler = None
             print(f'{token}? Compile terminated.')
         else:
-            self.compiler.add_instruction(push_value_f(n))
+            self.compiler.add_instruction(const_f(n))
 
     def execute_token(self, token):
         if is_string(token):
@@ -128,7 +124,7 @@ class Forth:
             return
 
         if token in self.dictionary:
-            self.dictionary[token](self)
+            self.dictionary[token](self, 0)
             return
 
         n = to_number(token)

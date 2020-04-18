@@ -31,15 +31,11 @@ def tokenize(s):
         elif state == 'start':
             token = ch
             state = 'word'
-        elif state == 's_string' and ch == "'":
-            tokens.append(token)
-            state = 'start'
-            token = ''
         elif state == 'string' and ch == '"':
             tokens.append(token)
             state = 'start'
             token = ''
-        elif state == 'word' and is_space(ch):
+        elif (state in ['word', 's_string']) and is_space(ch):
             tokens.append(token)
             state = 'start'
             token = ''
