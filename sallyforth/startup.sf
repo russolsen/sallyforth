@@ -42,6 +42,8 @@
 : { map-marker ;
 : } map-marker [list] list->map ;
 
+: {} ( -- <empty map>) { } ;
+
 'set-marker unique def
 : {{ set-marker ;
 : }} 
@@ -49,6 +51,8 @@
     set-marker swap set-marker [list] \ Nest list in argument list
     builtins.set !!                   \ Call set with 1 argument 
 ;
+
+: {{}} ( -- <empty set>) {{ }} ;
 
 : type (x -- type-of-x) 1 ->list builtins.type !! ;
 
