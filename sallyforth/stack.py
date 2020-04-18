@@ -21,6 +21,9 @@ class Stack:
     def peek(self):
         return self.stack[self.top]
 
+    def reset(self):
+        self.top = -1
+
     def __str__(self):
         result = ''
         for i in range(self.top + 1):

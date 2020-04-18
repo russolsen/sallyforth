@@ -1,4 +1,6 @@
-"Executing " . *source* . nl
+"Executing " dot *source* dot nl
+
+\ Pull in libs.
 
 "builtins" require
 "time" require
@@ -8,9 +10,47 @@
 "os.path" require
 "io" require
 
-: *prompt* "SF> " ;
+\ Basic aliases
+
+'dot          '.          alias
+'colon        ':          alias
+'semi         ';          alias
+'bounded_list '[list]     alias
+'list         '->list     alias
+'list_to_map  'list->map  alias
+'lookup       '@@         alias
+'call         '!!         alias
+'add          '+          alias
+'sub          '-          alias
+'mul          '*          alias
+'div          '/          alias
+'gt           '>          alias
+'lt           '<          alias
+'le           '<=         alias
+'ge           '>=         alias
+'eq           '=          alias
+
+: *prompt* "Sally> " ;
+
+'list-marker unique def
+: [ list-marker ;
+: ] list-marker [list] ;
 
 : [] ( -- <empty list>) [ ] ;
+
+'map-marker unique def
+: { map-marker ;
+: } map-marker [list] list->map ;
+
+'set-marker unique def
+: {{ set-marker ;
+: }} 
+    set-marker [list]                 \ Turn elements into list
+    set-marker swap set-marker [list] \ Nest list in argument list
+    builtins.set !!                   \ Call set with 1 argument 
+;
+
+: type (x -- type-of-x) 1 ->list builtins.type !! ;
 
 : px0 (mod fname -- result) []  px ;
 : px1 (mod fname arg -- result) 1 ->list px ;
@@ -25,6 +65,8 @@
 
 : >0 0 > ;
 : <0 0 < ;
+: >1 1 > ;
+: <1 1 < ;
 
 : p . nl ;
 : top dup p ;
@@ -35,7 +77,7 @@
 : neg? (n -- bool) 0 < ;
 : zero? (n -- bool) 0 = ;
 
-: source-if-exists 
+: source-if-exists (path --)
     dup 
     1 ->list os.path.exists
     if source else drop then
@@ -43,8 +85,6 @@
 
 : << [ ;
 : >> ] @@ ;
-
-: ! ( obj method args -- result ) rot stack ;
 
 "init.sf" source-if-exists
 

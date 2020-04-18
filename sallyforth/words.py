@@ -2,6 +2,10 @@ from compiler import Compiler
 import importlib
 from inspect import isfunction, isbuiltin
 
+class Unique:
+    def __str__(self):
+        return f'Unique[{id(self)}]'
+
 def const_f(value):
     def x(f, i):
         f.stack.push(value)
@@ -29,6 +33,16 @@ def import_native_module(forth, m, alias=None, excludes=[]):
             forth.dictionary[localname] = native_function_handler(val)
         else:
             forth.dictionary[localname] = const_f(val)
+
+def w_forth(f, i):
+    f.stack.push(f)
+    return i+1
+
+def w_alias(f, i):
+    new_name = f.stack.pop() 
+    old_name = f.stack.pop() 
+    f.dictionary[new_name] = f.dictionary[old_name]
+    return i + 1
 
 def w_require(f, i):
     name = f.stack.pop()
@@ -81,8 +95,8 @@ def w_import(f, i):
     return i+1
 
 def w_call(f, i):
-    args = f.stack.pop()
     func = f.stack.pop()
+    args = f.stack.pop()
     print('f', f, 'args', args)
     result = func(*args)
     print('result', result)
@@ -102,6 +116,25 @@ def w_px(f, i):
     #print('result', result)
     f.stack.push(result)
     return i+1
+
+def w_unique(f, ip):  # pushes a uique object.
+    f.stack.push(Unique())
+    return ip+1
+
+def w_bounded_list(f, ip):
+    """Create a list from delimted values on the stack.
+    [list]
+    (marker a b c marker -- [a b c]
+    """
+    marker = f.stack.pop()
+    l = []
+    x = f.stack.pop()
+    while x != marker:
+        l.append(x)
+        x = f.stack.pop()
+    l.reverse()
+    f.stack.push(l)
+    return ip+1
 
 def w_list(f, ip):    # ->list
     n = f.stack.pop()
@@ -158,6 +191,14 @@ def w_endmap(f, ip):    # }
     f.stack.push(result)
     return ip+1
 
+def w_list_to_map(f, ip):  # list->map
+    l = f.stack.pop()
+    result = {}
+    for i in range(0, len(l), 2):
+        result[l[i]] = l[i+1]
+    f.stack.push(result)
+    return ip+1
+
 def w_get(f, i):
     name = f.stack.pop()
     m = f.stack.pop()
@@ -176,7 +217,7 @@ def w_def(f, i):
     value = f.stack.pop()
     name = f.stack.pop()
     f.defvar(name, value)
-    #print('name', name, 'value', value)
+    print('name', name, 'value', value)
     return i+1
 
 def w_gt(f, i):
@@ -231,6 +272,10 @@ def w_div(f, i):
     a = f.stack.pop()
     b = f.stack.pop()
     f.stack.push(b/a)
+    return i+1
+
+def w_reset(f, i):
+    a = f.stack.reset()
     return i+1
 
 def w_dot(f, i):

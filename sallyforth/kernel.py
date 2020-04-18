@@ -24,26 +24,7 @@ class Forth:
                 'nil': const_f(None),
                 '0': const_f(0),
                 '1': const_f(1),
-                '2': const_f(2),
-                ';': w_semi,
-                ':': w_colon,
-                '->list': w_list,
-                '[': w_startlist,
-                ']': w_endlist,
-                '{': w_startmap,
-                '}': w_endmap,
-                '@@': w_lookup,
-                '!!': w_call,
-                '+': w_add,
-                '+': w_add,
-                '-': w_sub,
-                '/': w_div,
-                '>': w_gt,
-                '<': w_lt,
-                '<=': w_le,
-                '>=': w_ge,
-                '=': w_eq,
-                '.': w_dot}
+                '2': const_f(2) }
 
         self.import_from_module(words, 'w_')
 
@@ -75,6 +56,7 @@ class Forth:
 
     def execute_tokens(self, tokens):
         for token in tokens:
+            # print("token:", token)
             if not self.compiling():
                 self.execute_token(token)
             else:
@@ -104,9 +86,7 @@ class Forth:
         if token in self.dictionary:
             word = self.dictionary[token]
             if 'immediate' in word.__dict__:
-                #print('before immediate word:', self, self.dictionary)
                 word(self, 0)
-                #print('after immediate word:', self, self.dictionary)
             else:
                 self.compiler.add_instruction(self.dictionary[token])
             return

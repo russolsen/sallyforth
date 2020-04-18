@@ -16,9 +16,13 @@ def tokenize(s):
         #print(f'Loop state {state} token {token} ch {ch}')
         if state == 'start' and ch == '(':
             state = 'comment'
+        elif state == 'start' and ch == '\\':
+            state = 'line_comment'
+        elif state == 'line_comment' and ch == '\n':
+            state = 'start'
         elif state == 'comment' and ch == ')':
             state = 'start'
-        elif state == 'comment':
+        elif state in ['comment', 'line_comment']:
             continue
         elif state == 'start' and is_space(ch):
             continue
