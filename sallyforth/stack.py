@@ -18,6 +18,10 @@ class Stack:
             self.top = -1;
         return result
 
+    def __iter__(self):
+        for i in range(self.top, -1, -1):
+            yield self.stack[i]
+
     def peek(self):
         return self.stack[self.top]
 

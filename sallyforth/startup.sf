@@ -17,6 +17,7 @@
 'semi         ';          alias
 'bounded_list '[list]     alias
 'list         '->list     alias
+'to_arglist   '->arglist  alias
 'list_to_map  'list->map  alias
 'lookup       '@@         alias
 'call         '!!         alias
@@ -29,6 +30,7 @@
 'le           '<=         alias
 'ge           '>=         alias
 'eq           '=          alias
+'current_ns   '*ns*       alias
 
 : *prompt* "Sally> " ;
 
@@ -54,18 +56,25 @@
 
 : {{}} ( -- <empty set>) {{ }} ;
 
-: type (x -- type-of-x) 1 ->list builtins.type !! ;
+: [: [ ;
+: :] ] ->arglist ;
 
-: px0 (mod fname -- result) []  px ;
-: px1 (mod fname arg -- result) 1 ->list px ;
-: px2 (mod fname arg arg -- result) 2 ->list px ;
-: px3 (mod fname arg arg arg -- result) 3 ->list px ;
+: => [ ;
+: >! ] arrow ;
 
-: dir (mod -- keys) "dir" px0 ;
+: <. [ ;
+: .> ] arrow ;
+
+: !!0 [] swap call ;
+
+: type 1 ->list builtins.type !! ;
+
 : ctime [] time.ctime ;
 : sleep 1 ->list stack time.sleep drop ;
 
-: hello (simple greeting) "Hello" . nl ;
+: callable? 1 ->list builtins.callable ;
+
+: hello "Hello" . nl ;
 
 : >0 0 > ;
 : <0 0 < ;
@@ -75,20 +84,22 @@
 : p . nl ;
 : top dup p ;
 
-: -- ( n -- n-1 ) -1 + ;
-: ++ ( n -- n+1 ) 1 + ;
-: pos? (n -- bool) 0 > ;
-: neg? (n -- bool) 0 < ;
-: zero? (n -- bool) 0 = ;
+: --  -1 + ;
+: ++  1 + ;
+: pos?  0 > ;
+: neg?  0 < ;
+: zero? 0 = ;
 
-: source-if-exists (path --)
+: source-if-exists 
+    (path --)
     dup 
     1 ->list os.path.exists
     if source else drop then
 ;
 
 : << [ ;
-: >> ] @@ ;
+: >>@ ] @@ ;
+: >>! ] @@ [] swap !! ;
 
 "init.sf" source-if-exists
 

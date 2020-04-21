@@ -4,6 +4,7 @@ import atexit
 from kernel import Forth
 from lex import tokenize
 import readline
+import traceback
 
 HistoryFile=".sallyforth"
 
@@ -13,7 +14,7 @@ class Completer:
     def __init__(self, f):
         self.f = f
     def complete(self, prefix, index):
-        self.matching_words = [w for w in self.f.dictionary.keys() if w.startswith(prefix) ]
+        self.matching_words = [w for w in self.f.namespace.all_keys() if w.startswith(prefix) ]
         try:
             return self.matching_words[index]
         except IndexError:
@@ -32,14 +33,14 @@ def setup_readline(history_path, f):
     atexit.register(save_history)
 
 def setup_forth():
-    f = Forth()
-    f.defvar("argv", sys.argv[1::])
-
     source_dir = os.path.dirname(os.path.abspath(__file__))
     startup_file = f'{source_dir}/startup.sf'
 
     if os.path.exists(startup_file):
-        f.execute_file(startup_file)
+        f = Forth(startup_file)
+    else:
+        f = Forth()
+
 
     return f
 
@@ -62,6 +63,7 @@ def repl(f):
             print("Error:", exc_type)
             print("Error:", exc_value)
             print("Error:", exc_traceback)
+            traceback.print_tb(exc_traceback)
     
 
 if __name__ == "__main__":

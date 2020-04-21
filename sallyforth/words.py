@@ -1,6 +1,7 @@
-from compiler import Compiler
-import importlib
 from inspect import isfunction, isbuiltin
+import importlib
+from compiler import Compiler
+from arglist import Arglist
 
 class Unique:
     def __str__(self):
@@ -30,18 +31,31 @@ def import_native_module(forth, m, alias=None, excludes=[]):
         #print(localname)
         val = m.__getattribute__(name)
         if isfunction(val) or isbuiltin(val):
-            forth.dictionary[localname] = native_function_handler(val)
+            forth.namespace[localname] = native_function_handler(val)
         else:
-            forth.dictionary[localname] = const_f(val)
+            forth.namespace[localname] = const_f(val)
 
 def w_forth(f, i):
     f.stack.push(f)
     return i+1
 
+def w_current_ns(f, i):
+    f.stack.push(f.namespace)
+    return i + 1
+
+def w_ns(f, i):
+    name = f.stack.pop()
+    if name in f.namespaces:
+        f.namespace = f.namespaces[name]
+    else:
+        new_ns = f.make_namespace(name, {}, [f.forth_ns])
+        f.namespace = new_ns
+    return i + 1
+
 def w_alias(f, i):
     new_name = f.stack.pop() 
     old_name = f.stack.pop() 
-    f.dictionary[new_name] = f.dictionary[old_name]
+    f.namespace[new_name] = f.namespace[old_name]
     return i + 1
 
 def w_require(f, i):
@@ -91,7 +105,7 @@ def w_recur(f, i):
 def w_import(f, i):
     name = f.stack.pop()
     m = importlib.import_module(name)
-    f.dictionary[name] = const_f(m)
+    f.namespace[name] = const_f(m)
     return i+1
 
 def w_call(f, i):
@@ -105,15 +119,10 @@ def w_call(f, i):
 
 def w_px(f, i):
     args = f.stack.pop()
-    #print('args', args)
     name = f.stack.pop()
-    #print('name', name)
     m = f.stack.pop()
-    #print('mod:', m)
     func = m.__dict__[name]
-    #print('f:', f);
     result = func(*args)
-    #print('result', result)
     f.stack.push(result)
     return i+1
 
@@ -136,22 +145,49 @@ def w_bounded_list(f, ip):
     f.stack.push(l)
     return ip+1
 
+def w_to_arglist(f, ip):
+    l = f.stack.pop()
+    f.stack.push(Arglist(l))
+    return ip+1
+
 def w_list(f, ip):    # ->list
     n = f.stack.pop()
     l = []
     for i in range(n):
         l.append(f.stack.pop())
-    #print(l)
     f.stack.push(l)
     return ip+1
 
-def w_lookup(f, i):    # @@
+def qqw_lookup(f, i):    # @@
     l = f.stack.pop()
     value = l[0]
     for field in l[1::]:
         value = getattr(value, field)
     f.stack.push(value)
     return i+1
+
+def w_lookup(f, i):    # ->
+    value = f.stack.pop()
+    fields = f.stack.pop()
+    print(f'value {value} fields {fields}')
+
+    if not isinstance(fields, list):
+        fields = [fields]
+
+    for field in fields:
+        print(f'value {value} field {field}')
+        if isinstance(field, str) and hasattr(value, field):
+            print("->getattr")
+            value = getattr(value, field)
+        elif isinstance(field, Arglist):
+            print("->arglist")
+            value = value(*field)
+        else:
+            print("index")
+            value = value[field]
+    f.stack.push(value)
+    return i+1
+
 
 ListMarker = object()
 
@@ -210,6 +246,23 @@ def w_getattribute(f, i):
     name = f.stack.pop()
     x = f.stack.pop()
     result = x.__getattribute__(name)
+    f.stack.push(result)
+    return i+1
+
+def w_arrow(f, i):    # ->
+    contents = f.stack.pop()
+    result = contents[0]
+    for field in contents[1::]:
+        print(f'result {result} field {field}')
+        if isinstance(field, str) and hasattr(result, field):
+            print("->getattr")
+            result = getattr(result, field)
+        elif isinstance(field, Arglist):
+            print("->arglist")
+            result = result(*field)
+        else:
+            print("index")
+            result = result[field]
     f.stack.push(result)
     return i+1
 
@@ -322,7 +375,7 @@ def w_semi(forth, i):
     forth.compiler.add_instruction(w_return)
     name = forth.compiler.name
     word_f = execute_f(name, forth.compiler.instructions)
-    forth.dictionary[name] = word_f
+    forth.namespace[name] = word_f
     forth.compiler = None
     return i+1
 
@@ -419,5 +472,8 @@ def w_idump(f, i):
 w_idump.__dict__['immediate'] = True
 
 def w_stack(f, i):
-    print(f'Stack: <B[{f.stack}]T>')
+    print("::top::")
+    for x in f.stack:
+        print(f'{x}')
+    print("::bottom::")
     return i+1
