@@ -2,7 +2,7 @@ import sys
 from os import path
 from words import *
 import words
-from lex import forth_prompt, read_tokens, is_string, tokenize
+from lex import  is_string, Tokenizer
 from stack import Stack
 from namespace import Namespace
 
@@ -17,10 +17,12 @@ def to_number(token):
 
 class Forth:
     def __init__(self, startup=None):
+        self.tokenizer = Tokenizer(self)
         self.stack = Stack()
         self.namespaces = {}
         initial_defs = {
                 '*prompt*': const_f('SallyForth>> '),
+                'macroexpand': w_enlist,
                 'true': const_f(True),
                 'false': const_f(False),
                 'nil': const_f(None),
@@ -46,15 +48,27 @@ class Forth:
     def defvar(self, name, value):
         self.namespace[name] = const_f(value)
 
+    def py_evaluate(self, token, *args):
+        #print(f'Evaluate: token [{token}] args <<{args}>>')
+        rargs = list(args)
+        rargs.reverse()
+        if rargs:
+            for a in rargs:
+                # print("pushing", a);
+                self.stack.push(a)
+        #print(f'Before eval stack is {str(self.stack)}')
+        return self.evaluate_token(token)
+
     def evaluate_token(self, token):
+        #print("evaluate token: ", token)
         self.execute_token(token)
         return self.stack.pop()
 
     def compiling(self):
         return self.compiler
 
-    def execute_line(self, readline_f=forth_prompt):
-        tokens = read_tokens(readline_f)
+    def execute_line(self, line):
+        tokens = self.tokenizer.tokenize(line)
         self.execute_tokens(tokens)
 
     def execute_tokens(self, tokens):
@@ -64,6 +78,20 @@ class Forth:
                 self.execute_token(token)
             else:
                 self.compile_token(token)
+
+    def macro_expand_token(self, token):
+        if len(token) <= 0:
+            return [token]
+        if token[0] != '#':
+            return [token]
+        tag = token[1:]
+        return self.py_evaluate('macroexpand', tag)
+
+    def macro_expand_tokens(self, tokens):
+        results = []
+        for token in tokens:
+            results.extend(self.macro_expand_token(token))
+        return results
 
     def set_ns(self, ns_name):
         if ns_name in self.namespaces:
@@ -85,8 +113,7 @@ class Forth:
         with open(fpath) as f:
             line = f.readline()
             while line:
-                tokens = tokenize(line)
-                self.execute_tokens(tokens)
+                self.execute_line(line)
                 line = f.readline()
         self.namespace['*source*'] = old_source
         self.namespace = old_namespace

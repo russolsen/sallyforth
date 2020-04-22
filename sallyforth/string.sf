@@ -1,0 +1,7 @@
+"String" p
+
+: split  (delimit str -- tokens) 2 ->list  <. builtins.str 'split .> !! ;
+
+: dot-split (str -- tokens) "." swap split ;
+
+

@@ -2,7 +2,6 @@ import os
 import sys
 import atexit
 from kernel import Forth
-from lex import tokenize
 import readline
 import traceback
 
@@ -55,9 +54,8 @@ def repl(f):
         except EOFError:
             break
     
-        tokens = tokenize(line)
         try:
-            f.execute_tokens(tokens)
+            f.execute_line(line)
         except:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             print("Error:", exc_type)

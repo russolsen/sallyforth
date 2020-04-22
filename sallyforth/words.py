@@ -35,6 +35,16 @@ def import_native_module(forth, m, alias=None, excludes=[]):
         else:
             forth.namespace[localname] = const_f(val)
 
+def w_no_op(f, i):
+    return i+1
+
+def w_enlist(f, i):
+    print("Enlist!")
+    x = f.stack.pop()
+    print("Popped", x)
+    f.stack.push([x])
+    return i+1
+
 def w_forth(f, i):
     f.stack.push(f)
     return i+1

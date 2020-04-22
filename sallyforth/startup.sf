@@ -101,6 +101,9 @@
 : >>@ ] @@ ;
 : >>! ] @@ [] swap !! ;
 
+"string.sf" source
+"list.sf" source
+
 "init.sf" source-if-exists
 
 

@@ -1,0 +1,36 @@
+"List" p
+
+: [n] (n list -- nth-item) 
+      2 ->list                            \ Make the arg list.
+      <. builtins.list '__getitem__ .>    \ Find the getitem method.
+      !!                                  \ Call!
+;
+
+: first  (list -- first-item)  0 swap [n] ;
+: second (list -- second-item) 1 swap [n] ;
+: third  (list -- third-item)  2 swap [n] ;
+: fourth (list -- fourth-item) 3 swap [n] ;
+
+: last (list -- last-item) -1 swap [n] ;
+
+: slice (start stop -- slice-obj)
+  swap
+  2 ->list
+  builtins.slice
+  !!
+;
+
+: take (n list -- first-n-items)
+  swap 0 swap slice                 \ Make the 0..n slice.
+  swap [n]                          \ Do a[0..n].
+;
+ 
+: drop (n list -- all-but-first-n-items)
+  swap nil slice                       \ Make the n..None slice.
+  swap [n]
+;
+  
+ 
+  
+
+       

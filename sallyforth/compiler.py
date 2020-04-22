@@ -1,4 +1,3 @@
-from lex import forth_prompt
 from stack import Stack
 
 class Compiler:
