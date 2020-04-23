@@ -1,5 +1,6 @@
 from inspect import isfunction, isbuiltin
 import importlib
+import os
 from compiler import Compiler
 from arglist import Arglist
 
@@ -16,8 +17,11 @@ def const_f(value):
 def native_function_handler(func):
     def handle(forth, i):
         args = forth.stack.pop()
+        #print(f"Native fun, calling {func}({args})")
         result = func(*args)
+        #print(f'Result: {result}')
         forth.stack.push(result)
+        #print("pushed result")
         return i + 1
     return handle
 
@@ -34,6 +38,11 @@ def import_native_module(forth, m, alias=None, excludes=[]):
             forth.namespace[localname] = native_function_handler(val)
         else:
             forth.namespace[localname] = const_f(val)
+
+def w_eval(f, i):
+    token = f.stack.pop()
+    f.execute_token(token)
+    return i+1
 
 def w_no_op(f, i):
     return i+1
@@ -74,10 +83,35 @@ def w_require(f, i):
     import_native_module(f, m, name)
     return i + 1
 
+def source(f, path):
+    old_source_f = f.namespace.get('*source*', None)
+    old_namespace = f.namespace
+    try:
+        f.execute_file(path)
+    finally:
+        f.namespace['*source*'] = old_source_f
+        f.namespace = old_namespace
+
+def w_load(f, i):
+    path = f.stack.pop()
+    source(f, path)
+    return i + 1
+
 def w_source(f, i):
     path = f.stack.pop()
-    f.execute_file(path)
-    return i + 1
+    if os.path.isabs(path):
+        source(f, path)
+        return i+1
+
+    relative_dir = os.path.dirname(f.evaluate_token('*source*'))
+    relative_path = f'{relative_dir}/{path}'
+    if os.path.exists(relative_path):
+        source(f, relative_path)
+        return i+1
+
+    source(f, path)
+    return i+1
+
 
 def execute_f(name, instructions):
     #print('execute_f:', name, len(instructions))
@@ -140,6 +174,43 @@ def w_unique(f, ip):  # pushes a uique object.
     f.stack.push(Unique())
     return ip+1
 
+def w_map(f, ip):
+    l = f.stack.pop()
+    word = f.stack.pop()
+
+    word_f = f.namespace.get(word, None)
+    result = []
+
+    for item in l:
+        f.stack.push(item)
+        word_f(f, 0)
+        result.append(f.stack.pop())
+
+    f.stack.push(result)
+    return ip+1
+
+def w_reduce(f, ip):
+    l = f.stack.pop()
+    word = f.stack.pop()
+
+    word_f = f.namespace.get(word, None)
+
+    if len(l) <= 0:
+        f.stack.push(None)
+    elif len(l) == 1:
+        f.stack.push(l[0])
+    else:
+        result = l[0]
+        l = l[1::-1]
+        for item in l:
+            f.stack.push(result)
+            f.stack.push(item)
+            word_f(f, 0)
+            result = f.stack.pop()
+        f.stack.push(result)
+
+    return ip+1
+
 def w_bounded_list(f, ip):
     """Create a list from delimted values on the stack.
     [list]
@@ -168,34 +239,17 @@ def w_list(f, ip):    # ->list
     f.stack.push(l)
     return ip+1
 
-def qqw_lookup(f, i):    # @@
-    l = f.stack.pop()
-    value = l[0]
-    for field in l[1::]:
-        value = getattr(value, field)
-    f.stack.push(value)
-    return i+1
-
-def w_lookup(f, i):    # ->
-    value = f.stack.pop()
-    fields = f.stack.pop()
-    print(f'value {value} fields {fields}')
-
-    if not isinstance(fields, list):
-        fields = [fields]
-
-    for field in fields:
-        print(f'value {value} field {field}')
-        if isinstance(field, str) and hasattr(value, field):
-            print("->getattr")
-            value = getattr(value, field)
+def w_thread(f, i):    # @@
+    contents = f.stack.pop()
+    result = contents[0]
+    for field in contents[1::]:
+        if isinstance(field, str) and hasattr(result, field):
+            result = getattr(result, field)    # result.field
         elif isinstance(field, Arglist):
-            print("->arglist")
-            value = value(*field)
+            result = result(*field)            # result(*field)
         else:
-            print("index")
-            value = value[field]
-    f.stack.push(value)
+            result = result[field]             # result[field]
+    f.stack.push(result)
     return i+1
 
 
@@ -256,23 +310,6 @@ def w_getattribute(f, i):
     name = f.stack.pop()
     x = f.stack.pop()
     result = x.__getattribute__(name)
-    f.stack.push(result)
-    return i+1
-
-def w_arrow(f, i):    # ->
-    contents = f.stack.pop()
-    result = contents[0]
-    for field in contents[1::]:
-        print(f'result {result} field {field}')
-        if isinstance(field, str) and hasattr(result, field):
-            print("->getattr")
-            result = getattr(result, field)
-        elif isinstance(field, Arglist):
-            print("->arglist")
-            result = result(*field)
-        else:
-            print("index")
-            result = result[field]
     f.stack.push(result)
     return i+1
 
@@ -349,6 +386,60 @@ def w_dot(f, i):
 def w_dup(f, i):
     x = f.stack.peek()
     f.stack.push(x)
+    return i+1
+
+def w_tmb(f, i):  # A noop
+    # t = f.stack.pop()
+    # m = f.stack.pop()
+    # b = f.stack.pop()
+    # f.stack.push(b)
+    # f.stack.push(m)
+    # f.stack.push(t)
+    return i+1
+
+def w_tbm(f, i):
+    t = f.stack.pop()
+    m = f.stack.pop()
+    b = f.stack.pop()
+    f.stack.push(m)
+    f.stack.push(b)
+    f.stack.push(t)
+    return i+1
+
+def w_bmt(f, i):
+    t = f.stack.pop()
+    m = f.stack.pop()
+    b = f.stack.pop()
+    f.stack.push(t)
+    f.stack.push(m)
+    f.stack.push(b)
+    return i+1
+
+def w_btm(f, i):
+    t = f.stack.pop()
+    m = f.stack.pop()
+    b = f.stack.pop()
+    f.stack.push(m)
+    f.stack.push(t)
+    f.stack.push(b)
+    return i+1
+
+def w_mtb(f, i):
+    t = f.stack.pop()
+    m = f.stack.pop()
+    b = f.stack.pop()
+    f.stack.push(b)
+    f.stack.push(t)
+    f.stack.push(m)
+    return i+1
+
+def w_mbt(f, i):
+    t = f.stack.pop()
+    m = f.stack.pop()
+    b = f.stack.pop()
+    f.stack.push(t)
+    f.stack.push(b)
+    f.stack.push(m)
     return i+1
 
 def w_rot(f, i):

@@ -50,6 +50,7 @@ def repl(f):
             line = input(p)
         except KeyboardInterrupt:
             print("<<interrupt>>")
+            f.stack.reset()
             line = ''
         except EOFError:
             break

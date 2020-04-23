@@ -15,11 +15,11 @@
 'dot          '.          alias
 'colon        ':          alias
 'semi         ';          alias
+'thread       '@@         alias
 'bounded_list '[list]     alias
 'list         '->list     alias
 'to_arglist   '->arglist  alias
 'list_to_map  'list->map  alias
-'lookup       '@@         alias
 'call         '!!         alias
 'add          '+          alias
 'sub          '-          alias
@@ -59,11 +59,8 @@
 : [: [ ;
 : :] ] ->arglist ;
 
-: => [ ;
-: >! ] arrow ;
-
 : <. [ ;
-: .> ] arrow ;
+: .> ] thread ;
 
 : !!0 [] swap call ;
 
@@ -84,26 +81,24 @@
 : p . nl ;
 : top dup p ;
 
-: --  -1 + ;
-: ++  1 + ;
+: --    -1 + ;
+: ++    1 + ;
+: *2    2 * ;
 : pos?  0 > ;
 : neg?  0 < ;
 : zero? 0 = ;
 
 : source-if-exists 
-    (path --)
-    dup 
-    1 ->list os.path.exists
-    if source else drop then
+  (path --)
+  dup 
+  1 ->list os.path.exists
+  if source else drop then
 ;
 
-: << [ ;
-: >>@ ] @@ ;
-: >>! ] @@ [] swap !! ;
+: getattr (x 'fieldname -- field) swap 2 ->list builtins.getattr ;
+: .!! (obj args method-name -- result) tbm getattr !! ;
 
 "string.sf" source
 "list.sf" source
 
 "init.sf" source-if-exists
-
-

@@ -62,7 +62,7 @@ class Namespace:
         return self.contents.__iter__()
 
     def __getitem__(self, key):
-        # print("get item", key, self.contents)
+        #print("get item", key, self.name)
         if key in self.contents:
             return self.contents[key]
         # print("not in local ns")
