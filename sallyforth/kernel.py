@@ -23,6 +23,7 @@ class Forth:
         initial_defs = {
                 '*prompt*': const_f('SallyForth>> '),
                 'macroexpand': w_enlist,
+                '*source*': const_f(__file__),
                 'true': const_f(True),
                 'false': const_f(False),
                 'nil': const_f(None),
@@ -149,6 +150,7 @@ class Forth:
             return
 
         if token in self.namespace:
+            # print("executing ", token)
             self.namespace[token](self, 0)
             return
 
