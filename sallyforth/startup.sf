@@ -9,6 +9,7 @@
 "os" require
 "os.path" require
 "io" require
+"time" require
 
 \ Basic aliases
 
@@ -34,17 +35,31 @@
 
 : *prompt* "Sally> " ;
 
+\ Make a list.
 'list-marker unique def
 : [ list-marker ;
 : ] list-marker [list] ;
 
 : [] ( -- <empty list>) [ ] ;
 
+
+\ Look up attributes on a value.
+: <. [ ;
+: .> ] thread ;
+
+\ Call native functions with various # arguments.
+: !!0 [] swap !! ;
+: !!1 swap 1 ->list swap !! ;  
+: !!2 swap 2 ->list swap !! ;  
+
+\ Make a map.
 'map-marker unique def
 : { map-marker ;
 : } map-marker [list] list->map ;
 
 : {} ( -- <empty map>) { } ;
+
+\ Make a set.
 
 'set-marker unique def
 : {{ set-marker ;
@@ -59,17 +74,14 @@
 : [: [ ;
 : :] ] ->arglist ;
 
-: <. [ ;
-: .> ] thread ;
 
-: !!0 [] swap call ;
+: type builtins.type !!1 ;
 
-: type 1 ->list builtins.type !! ;
+: ctime time.ctime !!0 ;
 
-: ctime [] time.ctime ;
-: sleep 1 ->list stack time.sleep drop ;
+: sleep time.sleep !!1 drop ;
 
-: callable? 1 ->list builtins.callable ;
+: callable? builtins.callable !!1 ;
 
 : hello "Hello" . nl ;
 
@@ -88,14 +100,17 @@
 : neg?  0 < ;
 : zero? 0 = ;
 
+: exists? os.path.exists !!1 ;
+
 : source-if-exists 
-  (path --)
+  (path -- result-of-sourcing)
   dup 
-  1 ->list os.path.exists
+  exists?
   if source else drop then
 ;
 
-: getattr (x 'fieldname -- field) swap 2 ->list builtins.getattr ;
+: getattr ( obj attr -- attr-value ) swap 2 ->list builtins.getattr !! ;
+
 : .!! (obj args method-name -- result) tbm getattr !! ;
 
 "string.sf" source

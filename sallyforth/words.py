@@ -32,12 +32,8 @@ def import_native_module(forth, m, alias=None, excludes=[]):
     names = [x for x in raw_names if x not in excludes] 
     for name in names:
         localname = f'{alias}.{name}'
-        #print(localname)
         val = m.__getattribute__(name)
-        if isfunction(val) or isbuiltin(val):
-            forth.namespace[localname] = native_function_handler(val)
-        else:
-            forth.namespace[localname] = const_f(val)
+        forth.namespace[localname] = const_f(val)
 
 def w_eval(f, i):
     token = f.stack.pop()
@@ -155,9 +151,9 @@ def w_import(f, i):
 def w_call(f, i):
     func = f.stack.pop()
     args = f.stack.pop()
-    print('f', f, 'args', args)
+    # print('f', f, 'args', args)
     result = func(*args)
-    print('result', result)
+    # print('result', result)
     f.stack.push(result)
     return i+1
 

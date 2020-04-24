@@ -23,7 +23,7 @@
 ;
  
 : drop (n list -- all-but-first-n-items)
-  swap nil slice                       \ Make the n..None slice.
+  swap nil slice                    \ Make the n..None slice.
   [x]
 ;
   
@@ -31,6 +31,5 @@
 : rrest  (list -- rest-of-rest) rest rest ;
 : rrrest (list -- all-but-first) rest rest rest ; 
 
-: first   (list -- first-item) 1 swap drop ;
 : ffirst  (list -- first-of-first) first first ;
 : fffirst (list -- fff-irst) first first first ;
