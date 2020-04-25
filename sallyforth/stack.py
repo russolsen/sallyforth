@@ -19,8 +19,11 @@ class Stack:
         return result
 
     def __iter__(self):
-        for i in range(self.top, -1, -1):
+        for i in range(0, self.top+1):
             yield self.stack[i]
+
+    def empty(self):
+        return self.top == -1
 
     def peek(self):
         return self.stack[self.top]

@@ -44,9 +44,9 @@ def w_no_op(f, i):
     return i+1
 
 def w_enlist(f, i):
-    print("Enlist!")
+    # print("Enlist!")
     x = f.stack.pop()
-    print("Popped", x)
+    # print("Popped", x)
     f.stack.push([x])
     return i+1
 
@@ -313,7 +313,7 @@ def w_def(f, i):
     value = f.stack.pop()
     name = f.stack.pop()
     f.defvar(name, value)
-    print('name', name, 'value', value)
+    # print('name', name, 'value', value)
     return i+1
 
 def w_gt(f, i):
@@ -377,6 +377,13 @@ def w_reset(f, i):
 def w_dot(f, i):
     a = f.stack.pop()
     print(a, end='')
+    return i+1
+
+def w_splat(f, i):
+    l = f.stack.pop()
+    l.reverse()
+    for x in l:
+        f.stack.push(x)
     return i+1
 
 def w_dup(f, i):
@@ -569,8 +576,8 @@ def w_idump(f, i):
 w_idump.__dict__['immediate'] = True
 
 def w_stack(f, i):
-    print("::top::")
+    print("Stack:", end=' ')
     for x in f.stack:
-        print(f'{x}')
-    print("::bottom::")
+        print(f'{repr(x)}', end=' ')
+    print()
     return i+1

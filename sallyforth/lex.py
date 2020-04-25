@@ -11,7 +11,6 @@ def is_space(ch):
 class Tokenizer:
     def __init__(self, forth):
         self.forth = forth
-        print("Tokenizer:", self.forth)
 
     def tokenize(self, s):
         raw_tokens = self.raw_tokenize(s)

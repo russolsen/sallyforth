@@ -1,5 +1,3 @@
-"List" p
-
 \ Index into the x'th item.
 : [x] (col key -- value) 1 ->list '__getitem__ .!! ;
 
@@ -25,6 +23,10 @@
 : drop (n list -- all-but-first-n-items)
   swap nil slice                    \ Make the n..None slice.
   [x]
+;
+
+: repeat (n x -- list-of-x-repeated-n-times)
+  1 ->list * 
 ;
   
 : rest   (list -- all-but-first) 1 swap drop ;

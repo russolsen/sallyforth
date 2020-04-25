@@ -26,7 +26,7 @@ class Forth:
                 '*source*': const_f(__file__),
                 'true': const_f(True),
                 'false': const_f(False),
-                'nil': const_f(None),
+                'None': const_f(None),
                 '0': const_f(0),
                 '1': const_f(1),
                 '2': const_f(2)}
@@ -81,12 +81,16 @@ class Forth:
                 self.compile_token(token)
 
     def macro_expand_token(self, token):
-        if len(token) <= 0:
+        if len(token) <= 0 or token[0] != '#':
             return [token]
-        if token[0] != '#':
-            return [token]
+
         tag = token[1:]
-        return self.py_evaluate('macroexpand', tag)
+        parts = tag.split('.')
+        result = [ '<.', parts[0] ]
+        for part in parts[1::]:
+            result.append("'" + part)
+        result.append('.>')
+        return result
 
     def macro_expand_tokens(self, tokens):
         results = []
@@ -101,10 +105,10 @@ class Forth:
             raise ValueError(f'No such namespace: {ns_name}')
 
     def make_namespace(self, ns_name, initial_defs={}, refers=[]):
-        print(f'New namespace {ns_name} {refers}')
+        #print(f'New namespace {ns_name} {refers}')
         result = Namespace(ns_name, initial_defs, refers)
         self.namespaces[ns_name] = result
-        print(f'Returning {result}')
+        #print(f'Returning {result}')
         return result
 
     def execute_file(self, fpath):

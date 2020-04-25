@@ -1,4 +1,4 @@
-"Executing " dot *source* dot nl
+\ "Executing " dot *source* dot nl
 
 \ Pull in libs.
 
@@ -13,6 +13,7 @@
 
 \ Basic aliases
 
+'None         'nil        alias
 'dot          '.          alias
 'colon        ':          alias
 'semi         ';          alias
@@ -112,6 +113,10 @@
 : getattr ( obj attr -- attr-value ) swap 2 ->list builtins.getattr !! ;
 
 : .!! (obj args method-name -- result) tbm getattr !! ;
+: .!!0 (obj method-name -- result ) [] swap .!! ;
+: .!!1 (obj arg method-name -- result ) swap 1 ->list swap .!! ;
+: .!!2 (obj a1 a2 method-name -- result ) swap 2 ->list swap .!! ;
+: .!!3 (obj a1 a2 a3 method-name -- result ) swap 3 ->list swap .!! ;
 
 "string.sf" source
 "list.sf" source

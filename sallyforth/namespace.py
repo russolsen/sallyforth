@@ -1,9 +1,5 @@
 class Namespace:
     def __init__(self, name, initial_contents={}, refers=[]):
-        print('name', name)
-        print('initial contents', initial_contents)
-        print('refers', refers)
-        print('===')
         self.name = name
         self.contents = initial_contents.copy()
         self.refers = refers.copy()
