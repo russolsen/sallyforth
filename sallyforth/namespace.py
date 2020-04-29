@@ -38,7 +38,9 @@ class Namespace:
         return self[key]
         
     def __contains__(self, key):
+        #print(f'Namespace contains {key}')
         if self.contents.__contains__(key):
+            #print(self.contents[key])
             return True
         for r in self.refers:
             if r.__contains__(key):

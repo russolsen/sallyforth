@@ -4,14 +4,14 @@ class Stack:
         self.stack = 100 * [None]
 
     def push(self, x):
-        # print("stack push", x)
+        #print("stack push", x)
         self.top += 1
         self.stack[self.top] = x
         return x
 
     def pop(self):
         result = self.stack[self.top]
-        # print("stack pop", result)
+        #print("stack pop", result)
         self.top -= 1
         if self.top < -1:
             print("stack overpop")

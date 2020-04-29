@@ -1,0 +1,47 @@
+'*prompt* "sallySh> " def
+
+: child-run-prog (argv pid -- <<exit>>)
+  drop            \ Get rid of 0 pid.
+  execvp          \ Run the program
+;
+
+: parent-wait (cmd pid -- exit-status)
+  "parent" p
+  waitpid
+  "Child status:" p p
+  drop
+;
+
+: run-prog (argv -- status)
+  'child-run-prog 'parent-wait fork
+;
+
+'cmd-marker unique def
+
+: a cmd-marker ;
+
+: z 
+  cmd-marker bounded_list
+  stack
+  run-prog
+;
+
+'os import
+
+: expandvars #os.path.expandvars !!1 ;
+: expanduser #os.path.expanduser !!1 ;
+: expand expanduser expandvars ;
+
+\: prompt-and-run ( -- prog-status)
+\  ">> " read-line
+\  dup "x" = 
+\  if
+\    "Exit!" p
+\    drop
+\  else
+\    tokenize
+\   'expand map
+\    run-prog
+\    recur
+\  then
+\;

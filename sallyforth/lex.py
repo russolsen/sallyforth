@@ -1,7 +1,3 @@
-import sys
-import readline
-from os import path
-
 def is_string(token):
     return token[0] == '"' or token[0] == "'"
 

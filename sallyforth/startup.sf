@@ -18,6 +18,7 @@
 'colon        ':          alias
 'semi         ';          alias
 'thread       '@@         alias
+'exit_bang    'exit!      alias
 'bounded_list '[list]     alias
 'list         '->list     alias
 'to_arglist   '->arglist  alias
@@ -47,6 +48,7 @@
 \ Look up attributes on a value.
 : <. [ ;
 : .> ] thread ;
+: $? swap ;
 
 \ Call native functions with various # arguments.
 : !!0 [] swap !! ;
@@ -59,6 +61,7 @@
 : } map-marker [list] list->map ;
 
 : {} ( -- <empty map>) { } ;
+
 
 \ Make a set.
 
@@ -87,6 +90,8 @@
 : hello "Hello" . nl ;
 
 : >0 0 > ;
+: =0 0 = ;
+: <1 1 < ;
 : <0 0 < ;
 : >1 1 > ;
 : <1 1 < ;
@@ -118,7 +123,10 @@
 : .!!2 (obj a1 a2 method-name -- result ) swap 2 ->list swap .!! ;
 : .!!3 (obj a1 a2 a3 method-name -- result ) swap 3 ->list swap .!! ;
 
+\ todo : tokenize #forth.tokenizer.tokenize  !!1 ;
+
 "string.sf" source
 "list.sf" source
+"io.sf" source
 
 "init.sf" source-if-exists

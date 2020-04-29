@@ -20,7 +20,7 @@
   [x]                               \ Do a[0..n].
 ;
  
-: drop (n list -- all-but-first-n-items)
+: skip (n list -- all-but-first-n-items)
   swap nil slice                    \ Make the n..None slice.
   [x]
 ;
@@ -28,8 +28,12 @@
 : repeat (n x -- list-of-x-repeated-n-times)
   1 ->list * 
 ;
+
+: len builtins.len !!1 ;
+
+: empty? len zero? ;
   
-: rest   (list -- all-but-first) 1 swap drop ;
+: rest   (list -- all-but-first) 1 swap skip ;
 : rrest  (list -- rest-of-rest) rest rest ;
 : rrrest (list -- all-but-first) rest rest rest ; 
 

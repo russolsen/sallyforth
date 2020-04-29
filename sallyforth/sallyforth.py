@@ -1,9 +1,10 @@
 import os
 import sys
 import atexit
-from kernel import Forth
 import readline
 import traceback
+from kernel import Forth
+from tokenstream import prompt_token_stream
 
 HistoryFile=".sallyforth"
 
@@ -30,6 +31,9 @@ def setup_readline(history_path, f):
     def save_history():
         readline.write_history_file(history_path)
     atexit.register(save_history)
+    def prompt_f():
+        return f.evaluate_string('*prompt*')
+    return prompt_token_stream(prompt_f)    
 
 def setup_forth():
     source_dir = os.path.dirname(os.path.abspath(__file__))
@@ -39,34 +43,13 @@ def setup_forth():
         f = Forth(startup_file)
     else:
         f = Forth()
-
-
     return f
 
-def repl(f):
-    while True:
-        p = f.evaluate_token('*prompt*')
-        try:
-            line = input(p)
-        except KeyboardInterrupt:
-            print("<<interrupt>>")
-            f.stack.reset()
-            line = ''
-        except EOFError:
-            break
-    
-        try:
-            f.execute_line(line)
-        except:
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            print("Error:", exc_type)
-            print("Error:", exc_value)
-            print("Error:", exc_traceback)
-            traceback.print_tb(exc_traceback)
-    
+def repl(stream, f):
+    f.execute_token_stream(stream)
 
 if __name__ == "__main__":
     f = setup_forth()
-    setup_readline(hist_file, f)
-    repl(f)
+    stream = setup_readline(hist_file, f)
+    repl(stream, f)
     print("Bye!")
