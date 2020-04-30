@@ -29,10 +29,10 @@ def import_native_module(forth, m, alias=None, excludes=[]):
     names = [x for x in raw_names if x not in excludes] 
     for name in names:
         localname = f'{alias}.{name}'
-        val = m.__getattribute__(name)
-        forth.namespace[localname] = const_f(val)
+        val = getattr(m, name)
+        forth.namespace.set(localname, const_f(val))
 
-def w_nexttoken(f, i):
+def xx_w_nexttoken(f, i):
     token = f.read_next_token()
     f.stack.push(token)
     return i+1
@@ -139,7 +139,7 @@ def w_recur(f, i):
 def w_import(f, i):
     name = f.stack.pop()
     m = importlib.import_module(name)
-    f.namespace[name] = const_f(m)
+    f.namespace.set(name, const_f(m))
     return i+1
 
 def w_call(f, i):
@@ -165,20 +165,38 @@ def w_return(f, i):
 def w_colon(f, i):
     f.compiler = Compiler()
 
-def w_semi(forth, i):
+def i_semi(forth, i):
     forth.compiler.add_instruction(w_return)
     name = forth.compiler.name
     word_f = execute_f(name, forth.compiler.instructions)
-    forth.namespace[name] = word_f
+    forth.defword(name, word_f)
     forth.compiler = None
     return i+1
-w_semi.__dict__['immediate'] = True
+
+def w_compiling(f, i):
+    return f.stack.push(f.compiling())
+
+def i_readtoken(f, i):
+    kind, token = f.read_next_token()
+    if f.compiling():
+        compiler = f.compiler
+        compiler.add_instruction(const_f(token))
+    else:
+        f.stack.push(token)
+    return i+1
+
+def w_immediate(f, i):
+    flag = f.stack.pop()
+    name = f.stack.pop()
+    print(f'name: {name} flag {flag}')
+    f.namespace[name].immediate = flag
+    return i+1
 
 def w_should_not_happen(forth, i):
     print('Should not execute this word!')
     raise ValueError
 
-def w_if(forth, i):
+def i_if(forth, i):
     #print('w_if')
     compiler = forth.compiler
     compiler.push_offset()
@@ -186,9 +204,7 @@ def w_if(forth, i):
     compiler.add_instruction(w_should_not_happen)
     return i+1
 
-w_if.__dict__['immediate'] = True
-
-def w_then(forth, i):
+def i_then(forth, i):
     compiler = forth.compiler
     else_offset = compiler.pop_offset()
     if_offset = compiler.pop_offset()
@@ -203,28 +219,21 @@ def w_then(forth, i):
         compiler.instructions[else_offset] = jump_f(else_delta)
     return i+1
 
-w_then.__dict__['immediate'] = True
-
-
-def w_else(forth, i):
+def i_else(forth, i):
     compiler = forth.compiler
     compiler.pop_offset()
     compiler.push_offset()
     compiler.add_instruction(w_should_not_happen)
     return i+1
 
-w_else.__dict__['immediate'] = True
-
-def w_do(forth, i):
+def i_do(forth, i):
     #print('w_do')
     compiler = forth.compiler
     compiler.push_offset()
     compiler.add_instruction(w_should_not_happen)
     return i+1
 
-w_do.__dict__['immediate'] = True
-
-def w_while(forth, i):
+def i_while(forth, i):
     compiler = forth.compiler
     do_offset = compiler.pop_offset()
     while_offset = compiler.offset()
@@ -232,16 +241,12 @@ def w_while(forth, i):
     compiler.instructions[if_offset] = ifnot_jump_f(delta)
     return i+1
 
-w_while.__dict__['immediate'] = True
-
-def w_begin(forth, i):
+def i_begin(forth, i):
     compiler = forth.compiler
     compiler.push_offset()
     return i+1
 
-w_begin.__dict__['immediate'] = True
-
-def w_until(forth, i):
+def i_until(forth, i):
     compiler = forth.compiler
     begin_offset = compiler.pop_offset()
     until_offset = compiler.offset()
@@ -250,18 +255,13 @@ def w_until(forth, i):
     compiler.instructions.append(ifnot_jump_f(delta))
     return i+1
 
-
-w_until.__dict__['immediate'] = True
-
 def w_dump(f, i):
     f.dump()
     return i+1
 
-def w_idump(f, i):
+def i_idump(f, i):
     f.dump()
     return i+1
-
-w_idump.__dict__['immediate'] = True
 
 def w_stack(f, i):
     print("Stack:", end=' ')

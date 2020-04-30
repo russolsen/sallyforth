@@ -2,7 +2,6 @@ import sys
 from os import path
 import basic_words, data_words, operator_words, stack_words, os_words
 from basic_words import const_f, w_enlist
-#from lex import  is_string, Tokenizer
 import tokenstream as ts
 from stack import Stack
 from namespace import Namespace
@@ -21,26 +20,25 @@ class Forth:
         self.streams = Stack()
         self.stack = Stack()
         self.namespaces = {}
-        initial_defs = {
-                '*prompt*': const_f('SallyForth>> '),
-                'macroexpand': w_enlist,
-                '*source*': const_f(__file__),
-                'true': const_f(True),
-                'false': const_f(False),
-                'None': const_f(None),
-                '0': const_f(0),
-                '1': const_f(1),
-                '2': const_f(2)}
 
-        self.forth_ns = self.make_namespace('forth', initial_defs)
+        self.forth_ns = self.make_namespace('forth')
+        self.namespace = self.forth_ns
         user_ns = self.make_namespace('user', {}, [self.forth_ns])
 
-        self.forth_ns.import_from_module(basic_words, 'w_')
-        self.forth_ns.import_from_module(data_words, 'w_')
-        self.forth_ns.import_from_module(operator_words, 'w_')
-        self.forth_ns.import_from_module(stack_words, 'w_')
-        self.forth_ns.import_from_module(os_words, 'w_')
-        self.namespace = self.forth_ns
+        self.defword('*prompt*', const_f('SallyForth>> '))
+        self.defword('*source*', const_f(__file__))
+        self.defword('true', const_f(True))
+        self.defword('false', const_f(False))
+        self.defword('None', const_f(None))
+        self.defword('0', const_f(0))
+        self.defword('1', const_f(1))
+        self.defword('2', const_f(2))
+
+        self.forth_ns.import_from_module(basic_words)
+        self.forth_ns.import_from_module(data_words)
+        self.forth_ns.import_from_module(operator_words)
+        self.forth_ns.import_from_module(stack_words)
+        self.forth_ns.import_from_module(os_words)
 
         self.compiler = None
 
@@ -51,15 +49,19 @@ class Forth:
 
         self.namespace = user_ns
 
+    def defword(self, name, value):
+        self.namespace.set(name, value)
+
     def defvar(self, name, value):
-        self.namespace[name] = const_f(value)
+        self.defword(name, const_f(value))
 
     def compiling(self):
         return self.compiler
 
     def _compile_token(self, kind, token):
-        print(f"compile: {self.compiler.name}: {kind} {token}")
+        #print(f"compile: {self.compiler.name}: {token}")
         if self.compiler.name == None:
+            print(f'Compiling {token}')
             self.compiler.name = token
             return
 
@@ -68,11 +70,14 @@ class Forth:
             return
 
         if token in self.namespace:
-            word = self.namespace[token]
-            if 'immediate' in word.__dict__:
-                word(self, 0)
+            entry = self.namespace[token]
+            #print(token, entry)
+            if entry.immediate:
+                value = entry.get_ivalue()
+                value(self, 0)
             else:
-                self.compiler.add_instruction(self.namespace[token])
+                value = entry.get_cvalue()
+                self.compiler.add_instruction(value)
             return
 
         n = to_number(token)
@@ -88,8 +93,10 @@ class Forth:
             return
 
         if token in self.namespace:
-            # print("executing ", token)
-            self.namespace[token](self, 0)
+            #print("executing ", token)
+            f = self.namespace[token].get_ivalue()
+            #print(f)
+            f(self, 0)
             return
 
         n = to_number(token)
@@ -99,26 +106,22 @@ class Forth:
             self.stack.push(n)
 
     def execute_token(self, kind, token):
-        #print(f'execute kind {kind} token: {token}')
+        #print(f'execute_token: {token}')
         kts = self.macro_expand_token(kind, token)
         #print(kts)
         for kt in kts:
             this_kind, this_token = kt
-            #print(f'execute this {this_kind} {this_token}')
             if not self.compiling():
+                #print("interactive", this_token)
                 self._eval_token(this_kind, this_token)
             else:
+                #print("compiling...", this_token)
                 self._compile_token(this_kind, this_token)
-
-    def XX_execute_token_stream(self, s):
-        kind, token = s.get_token()
-        while kind != 'eof':
-            self.execute_token(kind, token)
-            kind, token = s.get_token()
+        #print("Done")
 
     def execute_current_stream(self):
         s = self.streams.peek()
-        print("exec current s:", s)
+        #print("exec current s:", s)
         kind, token = s.get_token()
         while kind != 'eof':
             self.execute_token(kind, token)
@@ -126,7 +129,7 @@ class Forth:
         self.streams.pop()
 
     def execute_token_stream(self, s):
-        print("exec token stream:", s)
+        #print("exec token stream:", s)
         self.streams.push(s)
         self.execute_current_stream()
 
@@ -143,7 +146,7 @@ class Forth:
         return s.get_token()
 
     def py_evaluate(self, s, *args):
-        print(f'Evaluate: token [{token}] args <<{args}>>')
+        #print(f'Evaluate: token [{token}] args <<{args}>>')
         rargs = list(args)
         rargs.reverse()
         if rargs:

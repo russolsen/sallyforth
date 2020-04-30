@@ -1,3 +1,18 @@
+class Entry:
+    def __init__(self, name, value, immediate):
+        self.name = name
+        self.value = value
+        self.immediate = immediate
+
+    def get_ivalue(self):
+        return self.value
+
+    def get_cvalue(self):
+        return self.value
+
+    def __str__(self):
+        return f'Entry {self.name} {self.immediate}'
+
 class Namespace:
     def __init__(self, name, initial_contents={}, refers=[]):
         self.name = name
@@ -10,18 +25,32 @@ class Namespace:
         """
         self.refers.append(ns)
 
-    def import_from_module(self, m, prefix):
+    def import_from_module(self, m):
         """
         Import all of the word defining functions in
         module m whose function names start with prefix
         into this namespace. Removes the prefix.
         """
         names = dir(m)
-        prefix_len = len(prefix)
         for name in names:
-            if name.startswith(prefix):
-                word_name = name[prefix_len::]
-                self[word_name] = m.__getattribute__(name)
+            if name.startswith("w_"):
+                word_name = name[2::]
+                #print(f'Setting {word_name} to false')
+                self.set(word_name, getattr(m, name))
+            elif name.startswith("i_"):
+                word_name = name[2::]
+                #print(f'Setting {word_name} to true')
+                self.set(word_name, getattr(m, name), immediate=True)
+
+    def set(self, name, value, cvalue=None, immediate=False):
+        if name not in self.contents:
+            entry = Entry(name, value, immediate)
+        else:
+            entry = self[name]
+            entry.value = value
+            entry.cvalue = cvalue
+            entry.immediate = immediate
+        self.contents[name] = entry
 
     def keys(self):
         return self.contents.keys()

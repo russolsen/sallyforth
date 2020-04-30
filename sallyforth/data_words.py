@@ -1,4 +1,5 @@
 from unique import Unique
+from arglist import Arglist
 
 def w_unique(f, ip):  # pushes a uique object.
     f.stack.push(Unique())
@@ -8,7 +9,7 @@ def w_map(f, ip):
     word = f.stack.pop()
     l = f.stack.pop()
 
-    word_f = f.namespace.get(word, None)
+    word_f = f.namespace.get(word, None).get_ivalue()
     result = []
 
     for item in l:
@@ -23,7 +24,7 @@ def w_reduce(f, ip):
     l = f.stack.pop()
     word = f.stack.pop()
 
-    word_f = f.namespace.get(word, None)
+    word_f = f.namespace.get(word, None).get_ivalue()
 
     if len(l) <= 0:
         f.stack.push(None)

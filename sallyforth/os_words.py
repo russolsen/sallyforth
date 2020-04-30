@@ -4,8 +4,8 @@ import sys
 def w_fork(f, i):
     parent_word = f.stack.pop()
     child_word = f.stack.pop()
-    parent_f = f.namespace.get(parent_word, None)
-    child_f = f.namespace.get(child_word, None)
+    parent_f = f.namespace.get(parent_word, None).get_ivalue()
+    child_f = f.namespace.get(child_word, None).get_ivalue()
     pid = os.fork()
     f.stack.push(pid)
     if pid == 0:

@@ -16,6 +16,7 @@ class Stack:
         if self.top < -1:
             print("stack overpop")
             self.top = -1;
+            raise ValueError("Stack underflow")
         return result
 
     def __iter__(self):

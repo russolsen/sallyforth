@@ -32,16 +32,18 @@
 : expanduser #os.path.expanduser !!1 ;
 : expand expanduser expandvars ;
 
-\: prompt-and-run ( -- prog-status)
-\  ">> " read-line
-\  dup "x" = 
-\  if
-\    "Exit!" p
-\    drop
-\  else
-\    tokenize
-\   'expand map
-\    run-prog
-\    recur
-\  then
-\;
+: tokenize <. $? 'split .> " " swap !!1 ;
+
+: prompt-and-run ( -- prog-status)
+  ">> " read-line
+  dup "x" = 
+  if
+    "Exit!" p
+    drop
+  else
+    tokenize
+   'expand map
+    run-prog
+    recur
+  then
+;

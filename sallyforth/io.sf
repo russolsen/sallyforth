@@ -9,4 +9,4 @@
   builtins.input !!1
 ;
 
-: read-next nexttoken second ;
+\ : read-next nexttoken second ;
