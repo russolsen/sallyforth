@@ -16,6 +16,10 @@ def w_dot(f, i):
     print(a, end='')
     return i+1
 
+def w_stackdepth(f, i):
+    d = f.stack.depth()
+    f.stack.push(d)
+
 def w_splat(f, i):
     l = f.stack.pop()
     l.reverse()
@@ -29,12 +33,6 @@ def w_dup(f, i):
     return i+1
 
 def w_tmb(f, i):  # A noop
-    # t = f.stack.pop()
-    # m = f.stack.pop()
-    # b = f.stack.pop()
-    # f.stack.push(b)
-    # f.stack.push(m)
-    # f.stack.push(t)
     return i+1
 
 def w_tbm(f, i):

@@ -44,16 +44,21 @@ def setup_forth():
 
 def repl(f):
     while True:
-        prompt = f.evaluate_string('*prompt*')
         try:
-            line = input(prompt)
-        except EOFError:
-            return
-        try:
-            f.execute_string(line)
-        except:
-            traceback.print_exc()
-
+            prompt = f.evaluate_string('*prompt*')
+            try:
+                line = input(prompt)
+                line += "\n"
+            except EOFError:
+                return
+            try:
+                f.stack.push(line)
+                f.execute_string("*execute-command*")
+                #f.execute_string(line)
+            except:
+               traceback.print_exc()
+        except KeyboardInterrupt:
+            print()
 
 if __name__ == "__main__":
     f = setup_forth()

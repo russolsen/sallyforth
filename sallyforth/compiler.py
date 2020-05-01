@@ -5,9 +5,13 @@ class Compiler:
         self.name = name
         self.instructions = []
         self.offsets = Stack()
+        self.inline = False
 
     def add_instruction(self, ins):
         self.instructions.append(ins)
+
+    def add_instructions(self, instructions):
+        self.instructions.extend(instructions)
 
     def offset(self):
         return len(self.instructions)

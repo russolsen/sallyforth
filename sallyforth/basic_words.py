@@ -32,14 +32,14 @@ def import_native_module(forth, m, alias=None, excludes=[]):
         val = getattr(m, name)
         forth.namespace.set(localname, const_f(val))
 
-def xx_w_nexttoken(f, i):
-    token = f.read_next_token()
-    f.stack.push(token)
-    return i+1
-
 def w_eval(f, i):
     token = f.stack.pop()
-    f.execute_token(token)
+    f.evaluate_string(token)
+    return i+1
+
+def w_execute(f, i):
+    token = f.stack.pop()
+    f.execute_string(token)
     return i+1
 
 def w_no_op(f, i):
@@ -155,6 +155,20 @@ def w_call(f, i):
     f.stack.push(result)
     return i+1
 
+def w_kwcall(f, i):
+    func = f.stack.pop()
+    kws = f.stack.pop()
+    args = f.stack.pop()
+    print('f', f, 'args', args, 'kws', kws)
+    try:
+        result = func(*args, **kws)
+    except:
+        print(f'Error executing {func}{list(args)}{kws}')
+        raise
+    print('result', result)
+    f.stack.push(result)
+    return i+1
+
 def w_nl(f, i):
     print()
     return i+1
@@ -165,11 +179,16 @@ def w_return(f, i):
 def w_colon(f, i):
     f.compiler = Compiler()
 
+def i_inline(f, i):
+    f.compiler.inline = True
+
 def i_semi(forth, i):
     forth.compiler.add_instruction(w_return)
     name = forth.compiler.name
     word_f = execute_f(name, forth.compiler.instructions)
-    forth.defword(name, word_f)
+    entry = forth.defword(name, word_f)
+    entry.inline = forth.compiler.inline
+    entry.definition = forth.compiler.instructions
     forth.compiler = None
     return i+1
 
@@ -277,4 +296,7 @@ def w_enlist(f, i):
     f.stack.push([x])
     return i+1
 
-
+def w_raise(f, i):
+    ex = f.stack.pop()
+    raise ex
+    return i+1

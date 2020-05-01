@@ -50,10 +50,10 @@ class Forth:
         self.namespace = user_ns
 
     def defword(self, name, value):
-        self.namespace.set(name, value)
+        return self.namespace.set(name, value)
 
     def defvar(self, name, value):
-        self.defword(name, const_f(value))
+        return self.defword(name, const_f(value))
 
     def compiling(self):
         return self.compiler
@@ -61,7 +61,7 @@ class Forth:
     def _compile_token(self, kind, token):
         #print(f"compile: {self.compiler.name}: {token}")
         if self.compiler.name == None:
-            print(f'Compiling {token}')
+            #print(f'Compiling {token}')
             self.compiler.name = token
             return
 
@@ -75,6 +75,8 @@ class Forth:
             if entry.immediate:
                 value = entry.get_ivalue()
                 value(self, 0)
+            elif entry.inline:
+                self.compiler.add_instructions(entry.definition[slice(0,-1)])
             else:
                 value = entry.get_cvalue()
                 self.compiler.add_instruction(value)
@@ -82,12 +84,13 @@ class Forth:
 
         n = to_number(token)
         if n == None:
-            print(f'{token}? Compile of {self.compiler.name} terminated.')
+            print(f'[{token}]?? Compile of [{self.compiler.name}] terminated.')
             self.compiler = None
         else:
             self.compiler.add_instruction(const_f(n))
 
     def _eval_token(self, kind, token):
+        #print(f'eval token {token} kind {kind}')
         if kind in ['dqstring', 'sqstring']:
             self.stack.push(token)
             return
@@ -153,7 +156,7 @@ class Forth:
             for a in rargs:
                 # print("pushing", a);
                 self.stack.push(a)
-        print(f'Before eval stack is {str(self.stack)}')
+        #print(f'Before eval stack is {str(self.stack)}')
         return self.evaluate_string(s)
 
 
@@ -168,7 +171,7 @@ class Forth:
         for part in parts[1::]:
             result.append(['sqstring', part])
         result.append(['word', '.>'])
-        print(result)
+        #print(result)
         return result
 
     def set_ns(self, ns_name):

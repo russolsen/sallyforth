@@ -23,6 +23,9 @@ class Stack:
         for i in range(0, self.top+1):
             yield self.stack[i]
 
+    def depth(self):
+        return self.top + 1
+
     def empty(self):
         return self.top == -1
 

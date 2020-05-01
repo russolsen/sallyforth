@@ -36,6 +36,8 @@ class TokenStream:
                 return ['eof', '']
             elif state == 'start' and ch == '\\':
                 state = 'lcomment'
+            elif state == 'start' and ch == '%':
+                return ['word', ch]
             elif state == 'lcomment' and ch == '\n':
                 state = 'start'
             elif state == 'start' and ch == '(':

@@ -1,0 +1,93 @@
+
+\ Test stack and arithmetic.
+
+reset stackdepth 0 = "Stack starts empty." assert
+reset 111 stackdepth 1 = "One item on stack" assert
+reset 111 222 333 stackdepth 3 = "Three items on stack" assert
+
+reset 1 2 3 reset stackdepth 0 = "Reset empties the stack." assert
+
+10 10 = "Stack and equality." assert
+1 2 < "1 less than 2." assert
+2 1 > "2 bigger than 1." assert
+99 99 = "99 is equal to itself." assert
+
+1 1 + 2 = "1 + 1 = 2" assert
+10 99 + 109 = "10 + 99 = 109" assert
+10 1 - 9 = "10 - 1 = 9" assert
+2 3 * 6 = "2*3 = 6" assert
+100 5 / 20 = "100 divided by 5 is 20." assert
+
+1 >0 "One is > 0." assert
+0 =0 "Zero is equal to itself." assert
+1 =0 not "One is not =0." assert
+
+1 pos? "One is positive." assert
+-1 pos? not "One is not positive." assert
+
+1 ++ 2 = "1++ is two." assert
+0 -- -1 = "0-- is -1." assert
+
+\ Booleans
+
+true "True is true." assert
+true not false = "Not true is false" assert
+false not "Not false is true." assert
+
+true true or "T or T is T." assert
+true false or "T or F is T." assert
+false true or "F or T is T." assert
+false false or not "F or F is F." assert
+
+true true and "T and T is T." assert
+true false and not "T and F is F." assert
+false true and not "F and T is F." assert
+false false and not "F and F is F." assert
+
+\ Secondary words
+
+: push8 8 ; push8 8 = "A word can push a number." assert
+
+: push8-again push8 ; 
+push8-again 8 = "A word can call another word." assert
+
+: push64 push8 push8 * ;
+push64 64 = "A word can use primitive and sec words." assert
+
+\ Logic
+
+: 1-if-true if 1 then ;
+
+reset true 1-if-true 1 = "True part of if fires." assert
+reset false 1-if-true stackdepth 0 = "if does not fire on false." assert
+
+: 1-or-2 if 1 else 2 then ;
+
+reset true 1-or-2 1 = "True part of ifelse fires." assert
+reset false 1-or-2 2 = "False part of ifelse fires." assert
+
+\ built in functions
+
+123 str "123" = "Str turns numbers into strings." assert
+"abcd" len 4 = "Len gets length of strings." assert
+
+\ Name lookup and calls
+
+"12" <. builtins 'len .> !!1 2 = "Can use bracket dot notation." assert
+"12" #builtins.len !!1 2 = "Can use sharp lookup notation." assert
+
+\ Lists
+
+0 ->list len 0 = "->list with a lenght of 0 gives you empty list." assert
+44 1 ->list len 1 = "->list with a lenght of 1 gives you 1 list." assert
+5 7 2 ->list len 2 = "->list with a lenght of 2 gives you 2 list." assert
+
+[ ] 0 ->list = "Brackets are the same as ->list."  assert
+[ 88 ] 88 1 ->list = "Brackets are the same as ->list."  assert
+[ 88 99 ] 99 88 2 ->list = "Brackets are the same as ->list."  assert
+
+[ "hello" ] first "hello" = "First works" assert
+
+[ ] empty? "Empty? knows an empty list." assert
+[ 1 ] empty? not "Empty? knows a non-empty list." assert
+[ 1 2 ] empty? not "Empty? knows a non-empty list." assert

@@ -36,9 +36,9 @@
 
 : prompt-and-run ( -- prog-status)
   ">> " read-line
-  dup "x" = 
+  dup "q" = 
   if
-    "Exit!" p
+    "Quit!" p
     drop
   else
     tokenize
@@ -47,3 +47,5 @@
     recur
   then
 ;
+
+: % "Toggle" p ;

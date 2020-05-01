@@ -1,8 +1,10 @@
 class Entry:
-    def __init__(self, name, value, immediate):
+    def __init__(self, name, value, immed):
         self.name = name
         self.value = value
-        self.immediate = immediate
+        self.immediate = immed
+        self.inline = False
+        self.definition = None
 
     def get_ivalue(self):
         return self.value
@@ -11,7 +13,10 @@ class Entry:
         return self.value
 
     def __str__(self):
-        return f'Entry {self.name} {self.immediate}'
+        result = f'Entry {self.name} {self.immediate} {self.inline}\n'
+        for x in self.definition:
+            result += f'{x}\n'
+        return result
 
 class Namespace:
     def __init__(self, name, initial_contents={}, refers=[]):
@@ -51,6 +56,7 @@ class Namespace:
             entry.cvalue = cvalue
             entry.immediate = immediate
         self.contents[name] = entry
+        return entry
 
     def keys(self):
         return self.contents.keys()
