@@ -28,8 +28,8 @@
 
 'os import
 
-: expandvars #os.path.expandvars !!1 ;
-: expanduser #os.path.expanduser !!1 ;
+: expandvars #os/path/expandvars !!1 ;
+: expanduser #os/path/expanduser !!1 ;
 : expand expanduser expandvars ;
 
 : tokenize <. $? 'split .> " " swap !!1 ;
@@ -47,5 +47,6 @@
     recur
   then
 ;
+
 
 : % "Toggle" p ;

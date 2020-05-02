@@ -76,8 +76,10 @@ def w_list(f, ip):    # ->list
 
 def w_thread(f, i):    # @@
     contents = f.stack.pop()
+    print("Contents:", contents)
     result = contents[0]
     for field in contents[1::]:
+        print("Result:", result)
         if isinstance(field, str) and hasattr(result, field):
             result = getattr(result, field)    # result.field
         elif isinstance(field, Arglist):

@@ -11,7 +11,7 @@
 : slice (start stop -- slice-obj)
   swap
   2 ->list
-  builtins.slice
+  builtins/slice
   !!
 ;
 
@@ -25,11 +25,11 @@
   [x]
 ;
 
-: repeat (n x -- list-of-x-repeated-n-times)
+: n-of (n x -- list-of-x-repeated-n-times)
   1 ->list * 
 ;
 
-: len builtins.len !!1 ;
+: len builtins/len !!1 ;
 
 : empty? len zero? ;
   
@@ -39,3 +39,9 @@
 
 : ffirst  (list -- first-of-first) first first ;
 : fffirst (list -- fff-irst) first first first ;
+
+: append (x list -- list-with-x-appended)
+  dup tbm 
+  <. $? 'append .> !!1
+  drop
+;

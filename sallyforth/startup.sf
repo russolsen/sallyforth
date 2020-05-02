@@ -38,7 +38,7 @@
 'current_ns   '*ns*       alias
 
 : *prompt* "Sally> " ;
-: *execute-command* stack execute ;
+: *execute-command* execute ;
 
 \ Make a list.
 'list-marker unique def
@@ -73,7 +73,7 @@
 : }} 
     set-marker [list]                 \ Turn elements into list
     set-marker swap set-marker [list] \ Nest list in argument list
-    builtins.set !!                   \ Call set with 1 argument 
+    builtins/set !!                   \ Call set with 1 argument 
     inline
 ;
 
@@ -83,17 +83,17 @@
 : :] ] ->arglist inline ;
 
 
-: str builtins.str !!1 ;
+: str builtins/str !!1 ;
 
-: type builtins.type !!1 ;
+: type builtins/type !!1 ;
 
 : type? (x class -- bool) swap type = ;
 
-: ctime time.ctime !!0 ;
+: ctime time/ctime !!0 ;
 
-: sleep time.sleep !!1 drop ;
+: sleep time/sleep !!1 drop ;
 
-: callable? builtins.callable !!1 ;
+: callable? builtins/callable !!1 ;
 
 : hello "Hello" . nl ;
 
@@ -114,16 +114,18 @@
 : neg?  0 < inline ;
 : zero? 0 = inline ;
 
-: exists? os.path.exists !!1 ;
+: exists? os/path/exists !!1 ;
 
 : source-if-exists 
   (path -- result-of-sourcing)
+  "SOURCE IF EXISTS" p
+  stack
   dup 
   exists?
   if source else drop then
 ;
 
-: getattr ( obj attr -- attr-value ) swap 2 ->list builtins.getattr !! ;
+: getattr ( obj attr -- attr-value ) swap 2 ->list builtins/getattr !! ;
 
 : .!! (obj args method-name -- result) tbm getattr !! ;
 : .!!0 (obj method-name -- result ) [] swap .!! ;
@@ -132,11 +134,11 @@
 : .!!3 (obj a1 a2 a3 method-name -- result ) swap 3 ->list swap .!! ;
 
 : assert ( bool msg -- )
-  swap
+  p
   if 
-    "OK " . p
+    "OK " p
   else
-    #builtins.AssertionError !!1
+    #builtins/AssertionError !!1
     raise
   then
 ;

@@ -24,6 +24,9 @@ class Namespace:
         self.contents = initial_contents.copy()
         self.refers = refers.copy()
 
+    def alias(self, new_name, existing_name):
+        self.contents[new_name] = self.contents[existing_name]
+
     def refer(self, ns):
         """
         Add the supplied namespace to the refers list.

@@ -3,6 +3,7 @@ import importlib
 import os
 from compiler import Compiler
 from arglist import Arglist
+from operator_words import w_not
 
 def const_f(value):
     def x(f, i):
@@ -25,11 +26,15 @@ def native_function_handler(func):
 def import_native_module(forth, m, alias=None, excludes=[]):
     if not alias:
         alias = m.__name__
+    alias = alias.replace(".", "/")
+    print(m, alias)
+
     raw_names = dir(m)
     names = [x for x in raw_names if x not in excludes] 
     for name in names:
-        localname = f'{alias}.{name}'
+        localname = f'{alias}/{name}'
         val = getattr(m, name)
+        print("setting", localname)
         forth.namespace.set(localname, const_f(val))
 
 def w_eval(f, i):
@@ -62,10 +67,18 @@ def w_ns(f, i):
         f.namespace = new_ns
     return i + 1
 
+def w_resolve(f, i):
+    token = f.stack.pop()
+    print("token", token)
+    resolved = f.resolve_token(token)
+    print("resovled:", resolved)
+    f.stack.push(resolved)
+    return i + 1
+
 def w_alias(f, i):
     new_name = f.stack.pop() 
     old_name = f.stack.pop() 
-    f.namespace[new_name] = f.namespace[old_name]
+    f.namespace.alias(new_name, old_name)
     return i + 1
 
 def w_require(f, i):
@@ -145,11 +158,11 @@ def w_import(f, i):
 def w_call(f, i):
     func = f.stack.pop()
     args = f.stack.pop()
-    # print('f', f, 'args', args)
+    #print('f', f, 'args', args)
     try:
         result = func(*args)
     except:
-        print(f'Error executing {func}{list(args)}')
+        print(f'Error executing {func}({args})')
         raise
     # print('result', result)
     f.stack.push(result)
@@ -189,6 +202,9 @@ def i_semi(forth, i):
     entry = forth.defword(name, word_f)
     entry.inline = forth.compiler.inline
     entry.definition = forth.compiler.instructions
+    #print(name)
+    #for ins in entry.definition:
+    #    print(ins)
     forth.compiler = None
     return i+1
 
@@ -223,6 +239,14 @@ def i_if(forth, i):
     compiler.add_instruction(w_should_not_happen)
     return i+1
 
+def i_ifnot(forth, i):
+    compiler = forth.compiler
+    compiler.add_instruction(w_not)
+    compiler.push_offset()
+    compiler.push_offset()
+    compiler.add_instruction(w_should_not_happen)
+    return i+2
+
 def i_then(forth, i):
     compiler = forth.compiler
     else_offset = compiler.pop_offset()
@@ -252,26 +276,40 @@ def i_do(forth, i):
     compiler.add_instruction(w_should_not_happen)
     return i+1
 
-def i_while(forth, i):
-    compiler = forth.compiler
-    do_offset = compiler.pop_offset()
-    while_offset = compiler.offset()
-    delta = do_offset - while_offset
-    compiler.instructions[if_offset] = ifnot_jump_f(delta)
-    return i+1
-
 def i_begin(forth, i):
     compiler = forth.compiler
     compiler.push_offset()
+    return i
+ 
+def i_while(forth, i):
+    compiler = forth.compiler
+    compiler.push_offset()
+    compiler.add_instruction(w_should_not_happen)
     return i+1
 
-def i_until(forth, i):
+def i_repeat(forth, i):
     compiler = forth.compiler
+    while_offset = compiler.pop_offset()
     begin_offset = compiler.pop_offset()
-    until_offset = compiler.offset()
-    delta = begin_offset - until_offset
-    #print('Delta:', delta)
-    compiler.instructions.append(ifnot_jump_f(delta))
+    repeat_offset = compiler.offset()
+    begin_delta = begin_offset - repeat_offset
+    while_delta = repeat_offset - while_offset + 1
+    print("Begin delta", begin_delta)
+    print("while delta", while_delta)
+    compiler.instructions[while_offset] = ifnot_jump_f(while_delta)
+    compiler.add_instruction(jump_f(begin_delta))
+    return i+1
+
+def w_marker1(f, i):
+    print("marker1")
+    return i+1
+
+def w_marker2(f, i):
+    print("marker3")
+    return i+1
+
+def w_marker3(f, i):
+    print("marker3")
     return i+1
 
 def w_dump(f, i):

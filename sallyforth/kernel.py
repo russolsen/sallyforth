@@ -3,17 +3,9 @@ from os import path
 import basic_words, data_words, operator_words, stack_words, os_words
 from basic_words import const_f, w_enlist
 import tokenstream as ts
+from kword import Keyword
 from stack import Stack
 from namespace import Namespace
-
-def to_number(token):
-    try:
-        return int(token)
-    except ValueError:
-        try:
-            return float(token)
-        except ValueError:
-            return None
 
 class Forth:
     def __init__(self, startup=None):
@@ -39,6 +31,7 @@ class Forth:
         self.forth_ns.import_from_module(operator_words)
         self.forth_ns.import_from_module(stack_words)
         self.forth_ns.import_from_module(os_words)
+        self.namespace.alias("*execute-command*", "execute")
 
         self.compiler = None
 
@@ -58,77 +51,71 @@ class Forth:
     def compiling(self):
         return self.compiler
 
-    def _compile_token(self, kind, token):
+    def _compile_token(self, token):
         #print(f"compile: {self.compiler.name}: {token}")
         if self.compiler.name == None:
             #print(f'Compiling {token}')
-            self.compiler.name = token
+            self.compiler.name = token.value
             return
 
-        if kind in ['dqstring', 'sqstring']:
-            self.compiler.add_instruction(const_f(token))
+        if token.isnumber() or token.isstring():
+            self.compiler.add_instruction(const_f(token.value))
             return
 
-        if token in self.namespace:
-            entry = self.namespace[token]
-            #print(token, entry)
-            if entry.immediate:
-                value = entry.get_ivalue()
-                value(self, 0)
-            elif entry.inline:
-                self.compiler.add_instructions(entry.definition[slice(0,-1)])
-            else:
-                value = entry.get_cvalue()
-                self.compiler.add_instruction(value)
+        if token.iskeyword():
+            self.compiler.add_instruction(Keyword(token.value))
             return
 
-        n = to_number(token)
-        if n == None:
+        if token.value not in self.namespace:
             print(f'[{token}]?? Compile of [{self.compiler.name}] terminated.')
             self.compiler = None
+            return
+
+        entry = self.namespace[token.value] 
+
+        if entry.immediate:
+            value = entry.get_ivalue()
+            value(self, 0)
+        elif entry.inline:
+            self.compiler.add_instructions(entry.definition[slice(0,-1)])
         else:
-            self.compiler.add_instruction(const_f(n))
+            value = entry.get_cvalue()
+            self.compiler.add_instruction(value)
 
-    def _eval_token(self, kind, token):
-        #print(f'eval token {token} kind {kind}')
-        if kind in ['dqstring', 'sqstring']:
-            self.stack.push(token)
-            return
-
-        if token in self.namespace:
-            #print("executing ", token)
-            f = self.namespace[token].get_ivalue()
-            #print(f)
-            f(self, 0)
-            return
-
-        n = to_number(token)
-        if n == None:
+    def _eval_token(self, token):
+        #print(f'***Eval token {token}')
+        if token == None:
             print(f'{token}?')
+        elif token.isnumber() or token.isstring():
+            self.stack.push(token.value)
+        elif token.iskeyword():
+            self.stack.push(Keyword(token.value))
+            return
+        elif token.value not in self.namespace:
+            print(f"{token.value}??")
         else:
-            self.stack.push(n)
+            entry = self.namespace[token.value] 
+            f = entry.get_ivalue()
+            f(self, 0)
 
-    def execute_token(self, kind, token):
+    def execute_token(self, token):
         #print(f'execute_token: {token}')
-        kts = self.macro_expand_token(kind, token)
-        #print(kts)
-        for kt in kts:
-            this_kind, this_token = kt
+        expanded_tokens = self.macro_expand_token(token)
+        #print(expanded_tokens)
+        for expanded in expanded_tokens:
             if not self.compiling():
-                #print("interactive", this_token)
-                self._eval_token(this_kind, this_token)
+                self._eval_token(expanded)
             else:
-                #print("compiling...", this_token)
-                self._compile_token(this_kind, this_token)
-        #print("Done")
+                self._compile_token(expanded)
 
     def execute_current_stream(self):
         s = self.streams.peek()
         #print("exec current s:", s)
-        kind, token = s.get_token()
-        while kind != 'eof':
-            self.execute_token(kind, token)
-            kind, token = s.get_token()
+        token = s.get_token()
+        while token:
+            #print("Exec:", token)
+            self.execute_token(token)
+            token = s.get_token()
         self.streams.pop()
 
     def execute_token_stream(self, s):
@@ -139,6 +126,22 @@ class Forth:
     def execute_string(self, s):
         token_stream = ts.string_token_stream(s)
         return self.execute_token_stream(token_stream)
+
+    def resolve_token(self, s):
+        token_stream = ts.string_token_stream(s)
+        token = token_stream.get_token()
+
+        print("token", token)
+
+        if token.isstring():
+            return token.value
+        elif token.isnumber():
+            return token.value
+        elif token.isword():
+            entry = self.namespace[token.value]
+            return entry.get_ivalue()
+        else:
+            return None
 
     def evaluate_string(self, s):
         self.execute_string(s)
@@ -154,24 +157,29 @@ class Forth:
         rargs.reverse()
         if rargs:
             for a in rargs:
-                # print("pushing", a);
+                #print("pushing", a);
                 self.stack.push(a)
         #print(f'Before eval stack is {str(self.stack)}')
         return self.evaluate_string(s)
 
 
-    def macro_expand_token(self, kind, token):
-        if len(token) <= 0 or token[0] != '#':
-            return [[kind, token]]
+    def macro_expand_token(self, token):
+        if not token.isword():
+            return [token]
+        elif len(token.value) <= 1:
+            return [token]
+        elif token.value[0] != '#':
+            return [token]
 
-        tag = token[1:]
+        print("Expanding token:", token)
+        tag = token.value[1:]
         parts = tag.split('.')
-        result = [ '<.', parts[0] ]
-        result = [['word', '<.'], ['word', parts[0]]]
+        print("Parts", parts)
+        result = [ ts.Token('word', '<.'), ts.Token('word', parts[0]) ]
         for part in parts[1::]:
-            result.append(['sqstring', part])
-        result.append(['word', '.>'])
-        #print(result)
+            result.append(ts.Token('string', part))
+        result.append(ts.Token('word', '.>'))
+        print(result)
         return result
 
     def set_ns(self, ns_name):
