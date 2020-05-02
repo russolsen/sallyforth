@@ -73,10 +73,12 @@ sallySh> 10 10 * 1 + p
 
 To boolean logic:
 
+```
 sallySh> true false and p
 False
 sallySh> false true or p
 True
+```
 
 To IO:
 
