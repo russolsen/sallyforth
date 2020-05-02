@@ -1,5 +1,38 @@
 import io
 
+def to_number(token):
+    try:
+        return int(token)
+    except ValueError:
+        try:
+            return float(token)
+        except ValueError:
+            return None
+
+class Token:
+    def __init__(self, kind, value):
+        self.kind = kind
+        self.value = value
+
+    def isstring(self):
+        return self.kind == 'string'
+
+    def isword(self):
+        return self.kind == 'word'
+
+    def iskeyword(self):
+        return self.kind == 'keyword'
+
+    def isnumber(self):
+        return self.kind == 'number'
+
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        return f'Token[{self.kind} => {self.value}]'
+
+
 class PromptInputStream:
     def __init__(self, prompt_f):
         self.prompt_f = prompt_f
@@ -25,19 +58,30 @@ class TokenStream:
         return ch in [' ', '\t', '\n']
 
     def get_token(self):
+        t = self.x_get_token()
+        #print("GET token:", t)
+        return t
+
+    def x_get_token(self):
         state = 'start'
         token = ''
         while True:
             ch = self.read_f()
             #print(f'ch: {ch} typech {type(ch)} state {state}')
             if ch in ['', None]:
-                if state in ['word', 'sqstring', 'dqstring']:
-                    return [state, token]
-                return ['eof', '']
+                if state in ['sqstring', 'dqstring']:
+                    return Token('string', token)
+                if state in ['word']:
+                    return Token('word', token)
+                return None
+            elif state == 'start' and ch == ':':
+                token = ch
+                state = 'keyword'
+            elif state == 'start' and ch in "+-0123456789":
+                token = ch
+                state = 'number'
             elif state == 'start' and ch == '\\':
                 state = 'lcomment'
-            elif state == 'start' and ch == '%':
-                return ['word', ch]
             elif state == 'lcomment' and ch == '\n':
                 state = 'start'
             elif state == 'start' and ch == '(':
@@ -49,16 +93,28 @@ class TokenStream:
             elif state == 'start' and ch == '"':
                 state = 'dqstring'
             elif state == 'dqstring' and ch == '"':
-                return [state, token]
+                return Token('string', token)
             elif state == 'start' and ch == "'":
                 state = 'sqstring'
             elif state == 'start':
                 state = 'word'
                 token += ch
-            elif state in ['word', 'sqstring'] and \
-                 self.whitespace(ch):
-                return state, token
-            elif state in ['word', 'dqstring', 'sqstring']:
+            elif state  == 'number' and self.whitespace(ch):
+                n = to_number(token)
+                if n:
+                    return Token('number', n)
+                else:
+                    return Token('word', token)
+            elif state  == 'word' and self.whitespace(ch):
+                return Token('word', token)
+            elif state  == 'sqstring' and self.whitespace(ch):
+                return Token('string', token)
+            elif state == 'keyword' and self.whitespace(ch):
+                state = 'start'
+                if len(token) == 1:
+                    return Token('word', token)
+                return Token('keyword', token)
+            elif state in ['word', 'dqstring', 'sqstring', 'number', 'keyword']:
                 token += ch
 
 def file_token_stream(f):
@@ -83,7 +139,7 @@ if __name__ == "__main__":
     pis = PromptInputStream(pmt)
     ts = TokenStream(pis.getc)
     
-    kind, token = ts.get_token()
-    while kind != 'eof':
-        print(kind, token)
-        kind, token = ts.get_token()
+    result = ts.get_token()
+    while result:
+        print("result:", result)
+        result = ts.get_token()
