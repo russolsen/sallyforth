@@ -18,7 +18,6 @@ reset 1 2 3 reset stackdepth 0 = "Reset empties the stack." assert
 2 3 * 6 = "2*3 = 6" assert
 100 5 / 20 = "100 divided by 5 is 20." assert
 
-1 >0 "One is > 0." assert
 0 =0 "Zero is equal to itself." assert
 1 =0 not "One is not =0." assert
 
@@ -46,22 +45,23 @@ false false and not "F and F is F." assert
 
 \ Secondary words
 
-: push8 8 ; push8 8 = "A word can push a number." assert
+: push8 8
+push8 8 = "A word can push a number." assert
 
-: push8-again push8 ; 
+: push8-again push8 
 push8-again 8 = "A word can call another word." assert
 
-: push64 push8 push8 * ;
+: push64 { push8 push8 * }
 push64 64 = "A word can use primitive and sec words." assert
 
 \ Logic
 
-: 1-if-true if 1 then ;
+: 1-if-true { if { 1 } }
 
 reset true 1-if-true 1 = "True part of if fires." assert
 reset false 1-if-true stackdepth 0 = "if does not fire on false." assert
 
-: 1-or-2 if 1 else 2 then ;
+: 1-or-2 { ifelse 1 2 }
 
 reset true 1-or-2 1 = "True part of ifelse fires." assert
 reset false 1-or-2 2 = "False part of ifelse fires." assert
@@ -74,7 +74,7 @@ reset false 1-or-2 2 = "False part of ifelse fires." assert
 \ Name lookup and calls
 
 "12" <. builtins 'len .> !!1 2 = "Can use bracket dot notation." assert
-"12" #builtins.len !!1 2 = "Can use sharp lookup notation." assert
+"12" builtins/len !!1 2 = "Can use sharp lookup notation." assert
 
 \ Lists
 
@@ -94,10 +94,10 @@ reset false 1-or-2 2 = "False part of ifelse fires." assert
 
 \ Loop
 
-: test-while ( n -- ) -999 swap begin dup zero? while -- repeat -888 ;
+: test-while ( n -- ) { -999 swap while { dup zero? } { -- } -888 }
 
 5 test-while 3 ->list [ -999 0 -888 ] "While loop works" assert
 
-: zero-trip-while begin false while "Should not get here." repeat ;
+: zero-trip-while { while { false  } { "Should not get here." } }
 
 888 zero-trip-while 888 = "While should handle zero trip case." assert

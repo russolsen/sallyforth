@@ -1,43 +1,33 @@
 class Stack:
     def __init__(self):
-        self.top = -1
-        self.stack = 100 * [None]
+        self.stack = []
 
     def push(self, x):
-        #print("stack push", x)
-        self.top += 1
-        self.stack[self.top] = x
+        self.stack.append(x)
         return x
 
     def pop(self):
-        result = self.stack[self.top]
-        #print("stack pop", result)
-        self.top -= 1
-        if self.top < -1:
-            print("stack overpop")
-            self.top = -1;
-            raise ValueError("Stack underflow")
-        return result
+        return self.stack.pop()
 
     def __iter__(self):
-        for i in range(0, self.top+1):
-            yield self.stack[i]
+        for x in self.stack:
+            yield x
 
     def depth(self):
-        return self.top + 1
+        return len(self.stack)
 
     def empty(self):
-        return self.top == -1
+        return len(self.stack) == 0
 
     def peek(self):
-        return self.stack[self.top]
+        return self.stack[-1]
 
     def reset(self):
-        self.top = -1
+        self.stack = []
 
     def __str__(self):
         result = ''
-        for i in range(self.top + 1):
-            result += str(self.stack[i])
+        for x in self.stack:
+            result += str(x)
             result += ' '
         return result

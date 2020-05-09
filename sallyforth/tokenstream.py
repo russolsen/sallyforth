@@ -14,6 +14,17 @@ class Token:
         self.kind = kind
         self.value = value
 
+    def __eq__(self, other):
+        if not isinstance(other, Token):
+            return False
+        return self.kind == other.kind and self.value == other.value
+
+    def __hash__(self):
+        return self.kind.__hash__() + self.value.__hash__()
+
+    def isblock(self):
+        return self.kind == 'block'
+
     def isstring(self):
         return self.kind == 'string'
 
@@ -30,7 +41,7 @@ class Token:
         return str(self)
 
     def __str__(self):
-        return f'Token[{self.kind} => {self.value}]'
+        return f'Token {self.kind} => {self.value}'
 
 
 class PromptInputStream:
@@ -52,6 +63,7 @@ class PromptInputStream:
 
 class TokenStream:
     def __init__(self, read_f):
+        #print("Tokenstream", read_f)
         self.read_f = read_f
 
     def whitespace(self, ch):
@@ -73,6 +85,9 @@ class TokenStream:
                     return Token('string', token)
                 if state in ['word']:
                     return Token('word', token)
+                if state == 'number':
+                    return Token('number', token)
+                #print("x get returning NONE")
                 return None
             elif state == 'start' and ch == ':':
                 token = ch
@@ -101,7 +116,8 @@ class TokenStream:
                 token += ch
             elif state  == 'number' and self.whitespace(ch):
                 n = to_number(token)
-                if n:
+                if n != None:
+                    #print("returning number", n)
                     return Token('number', n)
                 else:
                     return Token('word', token)
@@ -111,13 +127,14 @@ class TokenStream:
                 return Token('string', token)
             elif state == 'keyword' and self.whitespace(ch):
                 state = 'start'
-                if len(token) == 1:
+                if token in [':']:
                     return Token('word', token)
                 return Token('keyword', token)
             elif state in ['word', 'dqstring', 'sqstring', 'number', 'keyword']:
                 token += ch
 
 def file_token_stream(f):
+    #print("file token stream:", f)
     return TokenStream(lambda : f.read(1))
 
 def string_token_stream(s):

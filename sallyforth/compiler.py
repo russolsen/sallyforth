@@ -1,35 +1,63 @@
-from stack import Stack
+from tokenstream import Token
+from wrappers import value_f, inner_f, ref_f
 
-class Compiler:
-    def __init__(self, name=None):
-        self.name = name
-        self.instructions = []
-        self.offsets = Stack()
-        self.inline = False
+LBrace = Token('word', '{')
+RBrace = Token('word', '}')
 
-    def add_instruction(self, ins):
-        self.instructions.append(ins)
+def compile_word(forth, w):
+    name = w.value
+    var = forth.ns[name]
+    value = var.value
 
-    def add_instructions(self, instructions):
-        self.instructions.extend(instructions)
+    if value.forth_immediate:
+        return value(forth)
+    elif var.dynamic:
+        return ref_f(var)
+    else:
+        return value
 
-    def offset(self):
-        return len(self.instructions)
+def compile_token(forth, t):
+    if t.kind in ['number', 'string', 'keyword']:
+        f = value_f(t.value)
+    elif t.kind == 'word':
+        f = compile_word(forth, t)
+    else:
+        print(f'{n}??')
+        raise ValueError()
+    return f
 
-    def push_offset(self, value=None):
-        if not value:
-            self.offsets.push(self.offset())
-        else:
-            self.offsets.push(value)
-        #print("compiler stack", self.offsets.stack)
+def compile_value(contents, v):
+    #print("compiling", v, v.__dict__)
+    if v.forth_inline and v.forth_contents:
+        contents.extend(v.forth_contents)
+    else:
+        contents.append(v)
+    return contents
 
-    def pop_offset(self):
-        return self.offsets.pop()
+def compile_next(forth, stream, current_token=None):
+    if current_token:
+        t = current_token
+    else:
+        t = stream.get_token()
 
-    def _str__(self):
-        result = f'Compiler {name}'
-        for i in self.instructions:
-            result += str(i)
-            result += ' '
-        return result
+    if t == None:
+        return None
 
+    if t != LBrace:
+        return compile_token(forth, t)
+
+    contents = []
+    t = stream.get_token()
+    while t != RBrace:
+        compile_value(contents, compile_next(forth, stream, t))
+        t = stream.get_token()
+    f = inner_f(contents)
+    return f
+
+def eval_stream(forth, stream):
+    t = stream.get_token()
+    while t:
+        compiled = compile_next(forth, stream, t)
+        #print(f"*** compiled {t} => {compiled}")
+        compiled(forth)
+        t = stream.get_token()

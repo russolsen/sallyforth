@@ -1,47 +1,48 @@
 \ Index into the x'th item.
-: [x] (col key -- value) 1 ->list '__getitem__ .!! ;
 
-: first  (list -- first-item)  0 [x] ;
-: second (list -- second-item) 1 [x] ;
-: third  (list -- third-item)  2 [x] ;
-: fourth (list -- fourth-item) 3 [x] ;
+: [x] (col key -- value) { 1 ->list '__getitem__ .!! }
 
-: last (list -- last-item) -1 [x] ;
+: first  (list -- first-item)  { 0 [x] }
+: second (list -- second-item) { 1 [x] }
+: third  (list -- third-item)  { 2 [x] }
+: fourth (list -- fourth-item) { 3 [x] }
 
-: slice (start stop -- slice-obj)
+: last (list -- last-item) { -1 [x] }
+
+: slice (start stop -- slice-obj) {
   swap
   2 ->list
   builtins/slice
   !!
-;
+}
 
-: take (n list -- first-n-items)
+: take (n list -- first-n-items) {
   swap 0 swap slice                 \ Make the 0..n slice.
   [x]                               \ Do a[0..n].
-;
+}
  
-: skip (n list -- all-but-first-n-items)
+: skip (n list -- all-but-first-n-items) {
   swap nil slice                    \ Make the n..None slice.
   [x]
-;
+}
 
-: n-of (n x -- list-of-x-repeated-n-times)
+: n-of (n x -- list-of-x-repeated-n-times) {
   1 ->list * 
-;
+}
 
-: len builtins/len !!1 ;
+: len { builtins/len !!1 }
 
-: empty? len zero? ;
+: empty? { len zero? }
   
-: rest   (list -- all-but-first) 1 swap skip ;
-: rrest  (list -- rest-of-rest) rest rest ;
-: rrrest (list -- all-but-first) rest rest rest ; 
+: rest   (list -- all-but-first) { 1 swap skip }
+: rrest  (list -- rest-of-rest)  { rest rest }
+: rrrest (list -- all-but-first) { rest rest rest } 
 
-: ffirst  (list -- first-of-first) first first ;
-: fffirst (list -- fff-irst) first first first ;
+: ffirst  (list -- first-of-first) { first first }
+: fffirst (list -- fff-irst) { first first first }
 
-: append (x list -- list-with-x-appended)
+: append (x list -- list-with-x-appended) {
   dup tbm 
   <. $? 'append .> !!1
   drop
-;
+}

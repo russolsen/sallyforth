@@ -1,67 +1,69 @@
-def w_gt(f, i):
-    a = f.stack.pop()
-    b = f.stack.pop()
-    f.stack.push(b > a)
-    return i+1
+from util import word
 
-def w_lt(f, i):
-    a = f.stack.pop()
-    b = f.stack.pop()
-    f.stack.push(b < a)
-    return i+1
+@word('>')
+def gt(forth):
+    a = forth.stack.pop()
+    b = forth.stack.pop()
+    forth.stack.push(b > a)
 
-def w_eq(f, i):
-    a = f.stack.pop()
-    b = f.stack.pop()
-    f.stack.push(a==b)
-    return i+1
+@word('<')
+def lt(forth):
+    a = forth.stack.pop()
+    b = forth.stack.pop()
+    forth.stack.push(b < a)
 
-def w_le(f, i):
-    a = f.stack.pop()
-    b = f.stack.pop()
-    f.stack.push(b<=a)
-    return i+1
+@word('=')
+def eq(forth):
+    a = forth.stack.pop()
+    b = forth.stack.pop()
+    forth.stack.push(a==b)
 
-def w_ge(f, i):
-    a = f.stack.pop()
-    b = f.stack.pop()
-    f.stack.push(b>=a)
-    return i+1
+@word('<=')
+def le(forth):
+    a = forth.stack.pop()
+    b = forth.stack.pop()
+    forth.stack.push(b<=a)
 
-def w_add(f, i):
-    a = f.stack.pop()
-    b = f.stack.pop()
-    f.stack.push(b+a)
-    return i+1
+@word('>=')
+def ge(forth):
+    a = forth.stack.pop()
+    b = forth.stack.pop()
+    forth.stack.push(b>=a)
 
-def w_mul(f, i):
-    a = f.stack.pop()
-    b = f.stack.pop()
-    f.stack.push(b*a)
-    return i+1
+@word('+')
+def add(forth):
+    a = forth.stack.pop()
+    b = forth.stack.pop()
+    forth.stack.push(b+a)
 
-def w_sub(f, i):
-    a = f.stack.pop()
-    b = f.stack.pop()
-    f.stack.push(b-a)
-    return i+1
+@word('*')
+def mul(forth):
+    a = forth.stack.pop()
+    b = forth.stack.pop()
+    forth.stack.push(b*a)
 
-def w_div(f, i):
-    a = f.stack.pop()
-    b = f.stack.pop()
-    f.stack.push(b/a)
-    return i+1
+@word('-')
+def sub(forth):
+    a = forth.stack.pop()
+    b = forth.stack.pop()
+    forth.stack.push(b-a)
 
-def w_and(f, i):
-    f.stack.push(f.stack.pop() and f.stack.pop())
-    return i+1
+@word('/')
+def div(forth):
+    a = forth.stack.pop()
+    b = forth.stack.pop()
+    forth.stack.push(b/a)
 
-def w_or(f, i):
-    f.stack.push(f.stack.pop() or f.stack.pop())
-    return i+1
+@word('and')
+def w_and(forth):
+    forth.stack.push(forth.stack.pop() and forth.stack.pop())
 
-def w_not(f, i):
-    f.stack.push(not f.stack.pop())
-    return i+1
+@word('or')
+def w_or(forth):
+    forth.stack.push(forth.stack.pop() or forth.stack.pop())
+
+@word('not')
+def w_not(forth):
+    forth.stack.push(not forth.stack.pop())
 
 

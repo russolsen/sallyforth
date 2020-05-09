@@ -1,2 +1,0 @@
-class Arglist(list):
-    pass
