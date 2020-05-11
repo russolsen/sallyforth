@@ -91,12 +91,12 @@ Use it wisely.
 
 You can also define your own words. A word defintion starts with
 a colon, followed by the name of your new word, followed by
-the contents of your new word, followed by a semicolon. 
-Keep in mind that everything -- including the colon and semicolon,
+the contents of your new word, enclosed in braces.
+Keep in mind that everything -- including the colon and the braces --
 needs to be set off with whitespace:
 
 ```
-: hello-world "Hello, world!" p ;
+: hello-world { "Hello, world!" p }
 ```
 
 Once your new word is defined you can use it like any other word:
