@@ -1,9 +1,22 @@
 import tokenstream as ts
 from wrappers import noop
-from util import word
+from util import word, native_word
 from unique import Unique
 import importlib
 from pprint import pprint
+
+@word()
+def native(forth):
+    has_return = forth.stack.pop()
+    n = forth.stack.pop()
+    native_f = forth.stack.pop()
+    name = forth.stack.pop()
+    print('has_return', has_return)
+    print('n', n)
+    print('native_f', native_f)
+    print('name', name)
+    wrapped_f = native_word(native_f, name, n, has_return)
+    forth.set(name, wrapped_f)
 
 @word('raise')
 def w_raise(f):
@@ -128,13 +141,8 @@ def colon(forth):
 @word()
 def inline(forth):
     name = forth.stack.pop()
-    print("Word name:", name)
     var = forth.ns[name]
-    print('var', var)
-    print('value', var.value)
-    print('value dict', var.value.__dict__)
     var.value.forth_inline = True
-    print('moded value dict', var.value.__dict__)
 
 @word()
 def current_stream(forth):
@@ -148,11 +156,14 @@ def debug(forth):
     pprint(var)
     pprint(var.value.__dict__)
 
-@word()
 def fresult(forth, f):
     f(forth)
     result = forth.stack.pop()
     return result
+
+@word()
+def compilenext(forth):
+    forth.stack.push(forth.compile_next())
 
 @word('while', True)
 def w_while(forth):

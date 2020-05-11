@@ -65,7 +65,7 @@ class Namespace:
         return self.contents.keys()
 
     def __contains__(self, key):
-        return self.contents.__contains(key)
+        return self.contents.__contains__(key)
 
     def __delattr__(self, key):
         return self.contents.__delattr__(key)

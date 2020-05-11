@@ -46,3 +46,10 @@
   <. $? 'append .> !!1
   drop
 }
+
+\ Execute a native function in a list.
+
+: [! [
+: !] { ] dup rest swap first !! }
+
+
