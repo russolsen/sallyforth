@@ -6,6 +6,13 @@ import importlib
 from pprint import pprint
 
 @word()
+def dynamic(forth):
+    name = forth.stack.pop()
+    isdyn = forth.stack.pop()
+    var = forth.ns[name]
+    var.dynamic = isdyn
+
+@word()
 def native(forth):
     has_return = forth.stack.pop()
     n = forth.stack.pop()
@@ -62,8 +69,7 @@ def w_import(f):
 @word()
 def lexicon(f):
     name = f.stack.pop()
-    m = importlib.import_module(name)
-    f.ns.import_from_module(m)
+    f.ns.import_from_module(name)
 
 @word('source')
 def w_source(f):
@@ -142,7 +148,9 @@ def colon(forth):
 def inline(forth):
     name = forth.stack.pop()
     var = forth.ns[name]
-    var.value.forth_inline = True
+    value = var.value
+    if not value.forth_primitive:
+        value.forth_inline = True
 
 @word()
 def current_stream(forth):
@@ -164,6 +172,11 @@ def fresult(forth, f):
 @word()
 def compilenext(forth):
     forth.stack.push(forth.compile_next())
+
+@word('word!')
+def word_bang(forth):
+    f = forth.stack.pop()
+    f(forth)
 
 @word('while', True)
 def w_while(forth):

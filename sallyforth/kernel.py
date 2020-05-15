@@ -2,10 +2,10 @@ import sys
 import os
 from stack import Stack
 from namespace import Namespace
-import basic_words
-import stack_words
-import operator_words
-import data_words
+#import basic_words
+#import stack_words
+#import operator_words
+#import data_words
 import tokenstream as ts
 import compiler
 from wrappers import value_f
@@ -20,12 +20,13 @@ class Forth:
         self.set_constant('true', True)
         self.set_constant('false', False)
         self.set_constant('*source*', '<<input>>')
+        self.set_constant('*last-word*', None)
         self.set_constant('*sallyforth-dir*',
                 os.path.dirname(os.path.abspath(__file__)))
-        self.ns.import_from_module(basic_words)
-        self.ns.import_from_module(stack_words)
-        self.ns.import_from_module(operator_words)
-        self.ns.import_from_module(data_words)
+        self.ns.import_from_module('basic_words')
+        self.ns.import_from_module('stack_words')
+        self.ns.import_from_module('operator_words')
+        self.ns.import_from_module('data_words')
 
     def set_constant(self, name, value):
         return self.ns.set(name, value_f(value))

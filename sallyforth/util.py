@@ -12,7 +12,7 @@ class word:
             f.forth_name = self.name
         else:
             f.forth_name = f.__name__
-        f.forth_type = 'primitive'
+        f.forth_primitive = True
         f.forth_inline = False
         f.forth_immediate = self.immediate
         return f

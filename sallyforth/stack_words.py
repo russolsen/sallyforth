@@ -25,6 +25,18 @@ def swap(f):
     f.stack.push(b)
  
 @word()
+def t(f):
+    dup(f)
+
+@word()
+def m(f):
+    f.stack.push(f.stack[-2])
+
+@word()
+def b(f):
+    f.stack.push(f.stack[-3])
+
+@word()
 def tmb(f):  # A noop
     pass
 

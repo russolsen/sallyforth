@@ -1,5 +1,6 @@
 from util import get_attribute
 from wrappers import value_f
+from recoder import load_module
 
 class Var:
     def __init__(self, name, value, dynamic=True):
@@ -21,22 +22,25 @@ class Namespace:
     def alias(self, new_name, existing_name):
         self.contents[new_name] = self.contents[existing_name]
 
-    def import_from_module(self, m):
+    def import_from_module(self, module_name):
         """
         Import all of the word defining functions in
         module m whose function names start with prefix
         into this namespace. Removes the prefix.
         """
+        m = load_module(module_name)
+        print(m)
         names = dir(m)
         for name in names:
             value = getattr(m, name)
+            print("IMP", name, value, '=>', getattr(value, 'ast', None))
             if get_attribute(value, 'forth_word'):
                 forth_name = value.forth_name or name
                 var = self.set(forth_name, value, False)
-                var.immediate = value.forth_immediate
+                #var.immediate = value.forth_immediate
                 #print(var)
-                if var.immediate:
-                    print(name, 'immediate')
+                #if var.immediate:
+                #    print(name, 'immediate')
 
     def import_native_module(self, m, alias=None):
         if not alias:
