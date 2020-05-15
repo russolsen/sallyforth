@@ -29,24 +29,20 @@ class Namespace:
         into this namespace. Removes the prefix.
         """
         m = load_module(module_name)
-        print(m)
+        #print(m)
         names = dir(m)
         for name in names:
             value = getattr(m, name)
-            print("IMP", name, value, '=>', getattr(value, 'ast', None))
+            #print("IMP", name, value, '=>', getattr(value, 'ast', None))
             if get_attribute(value, 'forth_word'):
                 forth_name = value.forth_name or name
                 var = self.set(forth_name, value, False)
-                #var.immediate = value.forth_immediate
-                #print(var)
-                #if var.immediate:
-                #    print(name, 'immediate')
 
     def import_native_module(self, m, alias=None):
         if not alias:
             alias = m.__name__
             alias = alias.replace(".", "/")
-        print(m, alias)
+        #print(m, alias)
     
         names = dir(m)
         for name in names:

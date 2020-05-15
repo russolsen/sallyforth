@@ -26,21 +26,21 @@ def native(forth):
     forth.set(name, wrapped_f)
 
 @word('raise')
-def w_raise(f):
-    ex = f.stack.pop()
+def w_raise(forth):
+    ex = forth.stack.pop()
     raise ex
 
 @word(immediate=True)
-def readtoken(f):
-    t = f.stream.get_token()
+def readtoken(forth):
+    t = forth.stream.get_token()
     def push_token(xforth):
         xforth.stack.push(t)
     return push_token
 
 @word("!!")
-def w_call(f):
-    func = f.stack.pop()
-    args = f.stack.pop()
+def w_call(forth):
+    func = forth.stack.pop()
+    args = forth.stack.pop()
     #print('f', f, 'args', args)
     try:
         result = func(*args)
@@ -48,93 +48,93 @@ def w_call(f):
         print(f'Error executing {func}({args})')
         raise
     #print('result', result)
-    f.stack.push(result)
+    forth.stack.push(result)
 
 @word()
-def unique(f):
-    f.stack.push(Unique())
+def unique(forth):
+    forth.stack.push(Unique())
 
 @word()
-def load(f):
-    name = f.stack.pop()
+def load(forth):
+    name = forth.stack.pop()
     m = importlib.import_module(name)
-    f.set_constant(name, m)
+    forth.set_constant(name, m)
 
 @word('import')
-def w_import(f):
-    name = f.stack.pop()
+def w_import(forth):
+    name = forth.stack.pop()
     m = importlib.import_module(name)
-    f.ns.import_native_module(m)
+    forth.ns.import_native_module(m)
 
 @word()
-def lexicon(f):
-    name = f.stack.pop()
-    f.ns.import_from_module(name)
+def lexicon(forth):
+    name = forth.stack.pop()
+    forth.ns.import_from_module(name)
 
 @word('source')
-def w_source(f):
-    path = f.stack.pop()
-    f.eval_file(path)
+def w_source(forth):
+    path = forth.stack.pop()
+    forth.eval_file(path)
 
 @word('alias')
-def w_alias(f):
-    new_name = f.stack.pop()
-    old_name = f.stack.pop()
-    f.alias(new_name, old_name)
+def w_alias(forth):
+    new_name = forth.stack.pop()
+    old_name = forth.stack.pop()
+    forth.alias(new_name, old_name)
 
 @word()
-def rawdef(f):
-    name = f.stack.pop()
-    value = f.stack.pop()
-    f.set(name, value)
+def rawdef(forth):
+    name = forth.stack.pop()
+    value = forth.stack.pop()
+    forth.set(name, value)
 
 @word("=!")
-def equal_bang(f):
-    name = f.stack.pop()
-    value = f.stack.pop()
-    f.set_constant(name, value)
+def equal_bang(forth):
+    name = forth.stack.pop()
+    value = forth.stack.pop()
+    forth.set_constant(name, value)
 
 @word("*prompt*")
-def promptword(f):
-    f.stack.push(">> ")
+def promptword(forth):
+    forth.stack.push(">> ")
 
 @word()
-def lookup(f):
-    name = f.stack.pop()
-    f.stack.push(f.ns[name])
+def lookup(forth):
+    name = forth.stack.pop()
+    forth.stack.push(forth.ns[name])
 
 @word()
-def forget(f):
-    name = f.stack.pop()
-    del f.ns[name]
+def forget(forth):
+    name = forth.stack.pop()
+    del forth.ns[name]
 
 @word()
-def p(f):
-    print(f.stack.pop())
+def p(forth):
+    print(forth.stack.pop())
 
 @word()
-def nl(f):
+def nl(forth):
     print()
 
 @word('.')
-def dot(f):
-    print(f.stack.pop(), end='')
+def dot(forth):
+    print(forth.stack.pop(), end='')
 
 @word()
-def splat(f):
-    l = f.stack.pop()
+def splat(forth):
+    l = forth.stack.pop()
     l.reverse()
     for x in l:
-        f.stack.push(x)
+        forth.stack.push(x)
 
 @word()
-def stack(f):
-    print(f.stack)
+def stack(forth):
+    print(forth.stack)
 
 @word()
-def ns(f):
-    print(f.ns.name)
-    print(f.ns.contents)
+def ns(forth):
+    print(forth.ns.name)
+    print(forth.ns.contents)
 
 @word(':', True)
 def colon(forth):

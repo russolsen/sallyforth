@@ -38,7 +38,7 @@ def compile_token(forth, t):
     return f
 
 def compile_value(contents, v):
-    print("compiling", v, v.__dict__)
+    #print("compiling", v, v.__dict__)
     if v.forth_inline and v.forth_contents:
         contents.extend(v.forth_contents)
     else:
