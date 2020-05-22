@@ -10,6 +10,7 @@ def dynamic(forth):
     name = forth.stack.pop()
     isdyn = forth.stack.pop()
     var = forth.ns[name]
+    print(f'name: {name} var: {var} dyn: {isdyn}')
     var.dynamic = isdyn
 
 @word()
@@ -24,6 +25,18 @@ def native(forth):
     print('name', name)
     wrapped_f = native_word(native_f, name, n, has_return)
     forth.set(name, wrapped_f)
+
+@word("function")
+def function_word(forth):
+    name = forth.stack.pop()
+    var = forth.ns[name]
+    word_f = var.value
+    def native_f(*args):
+        forth.stack.push(args)
+        word_f(forth)
+        result = forth.stack.pop()
+        return result
+    forth.stack.push(native_f)
 
 @word('raise')
 def w_raise(forth):
@@ -134,7 +147,7 @@ def stack(forth):
 @word()
 def ns(forth):
     print(forth.ns.name)
-    print(forth.ns.contents)
+    pprint(forth.ns.contents)
 
 @word(':', True)
 def colon(forth):
@@ -147,6 +160,7 @@ def colon(forth):
 @word()
 def inline(forth):
     name = forth.stack.pop()
+    print('name', name)
     var = forth.ns[name]
     value = var.value
     if not value.forth_primitive:

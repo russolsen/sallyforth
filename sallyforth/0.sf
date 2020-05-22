@@ -15,7 +15,9 @@
 
 \ Basic aliases
 
-: ->inline { *last-word* inline }
+: ->inline  { *last-word* inline }
+: ->static  { false *last-word* dynamic }
+: ->dynamic { true *last-word* dynamic }
 
 : -- { 1 - }           ->inline
 : ++ { 1 + }           ->inline
