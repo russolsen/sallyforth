@@ -56,11 +56,15 @@ def div(forth):
 
 @word('and')
 def w_and(forth):
-    forth.stack.push(forth.stack.pop() and forth.stack.pop())
+    a = forth.stack.pop()
+    b = forth.stack.pop()
+    forth.stack.push(a and b)
 
 @word('or')
 def w_or(forth):
-    forth.stack.push(forth.stack.pop() or forth.stack.pop())
+    a = forth.stack.pop()
+    b = forth.stack.pop()
+    forth.stack.push(a or b)
 
 @word('not')
 def w_not(forth):
