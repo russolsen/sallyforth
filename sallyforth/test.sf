@@ -89,6 +89,7 @@ reset false 1-or-2 2 = "False part of ifelse fires." assert
 [ "hello" ] first "hello" = "First works" assert
 
 [ ] empty? "Empty? knows an empty list." assert
+[]  empty? "Empty? knows an empty list." assert
 [ 1 ] empty? not "Empty? knows a non-empty list." assert
 [ 1 2 ] empty? not "Empty? knows a non-empty list." assert
 
@@ -101,3 +102,7 @@ reset false 1-or-2 2 = "False part of ifelse fires." assert
 : zero-trip-while { while { false  } { "Should not get here." } }
 
 888 zero-trip-while 888 = "While should handle zero trip case." assert
+
+\ Strings
+
+reset "abc.def.h" dot-split [ "abc" "def" "h" ] = "Dot split splits" assert
