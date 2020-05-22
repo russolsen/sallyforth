@@ -8,6 +8,32 @@ class Var:
         self.value = value
         self.dynamic = dynamic
 
+    def __call__(self, forth):
+        #print("indirect call on", self.name)
+        return self.value(forth)
+
+    @property
+    def forth_immediate(self):
+        return self.value.forth_immediate
+
+    @property
+    def forth_contents(self):
+        #print("indirect contents on", self.name)
+        return self.value.forth_contents
+
+    @property
+    def forth_primitive(self):
+        return self.value.forth_primitive
+
+    @property
+    def forth_name(self):
+        #print("indirect name on", self.name)
+        return self.value.forth_name
+
+    @property
+    def forth_inline(self):
+        return self.value.forth_inline
+
     def __str__(self):
         return f'[[[[Var({self.name}/{self.dynamic}::{self.value})]]]'
 
@@ -77,6 +103,7 @@ class Namespace:
         return self.contents.__iter__()
 
     def __getitem__(self, key):
+        #print("getitem:", key)
         return self.contents.__getitem__(key)
 
     def __str__(self):
