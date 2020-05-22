@@ -1,5 +1,5 @@
 from tokenstream import Token
-from wrappers import value_f, inner_f, inner2_f, inner3_f, ref_f, noop
+from wrappers import value_f, inner_f, inner2_f, inner3_f, noop
 from recoder import concat_functions
 
 LBrace = Token('word', '{')
@@ -23,7 +23,7 @@ def compile_word(forth, w):
     if value.forth_immediate:
         return value(forth)
     elif var.dynamic:
-        return ref_f(var)
+        return var
     else:
         return value
 
