@@ -10,6 +10,10 @@ def to_number(token):
             return None
 
 class Token:
+    """
+    A Token consists of a string, something like "123" or "dup"
+    and kind, also a string, something like "number" or "word".
+    """
     def __init__(self, kind, value):
         self.kind = kind
         self.value = value
@@ -50,6 +54,7 @@ def stoken(value):
     return Token('string', value)
 
 class PromptInputStream:
+    "A stream of characters from in input prompt."
     def __init__(self, prompt_f):
         self.prompt_f = prompt_f
         self.buffer = []
@@ -67,46 +72,72 @@ class PromptInputStream:
             return ''
 
 class TokenStream:
+    """
+    A TokenStream reads and returns one token at a time.
+    To create a TokenStream instance you supply the constructor
+    with a function that returns one character at a time.
+    """
     def __init__(self, read_f):
-        #print("Tokenstream", read_f)
         self.read_f = read_f
+        self.pushed_char = None
+
+    def special(self, ch):
+        return ch in ['(', ')', '{', '}']
 
     def whitespace(self, ch):
         return ch in [' ', '\t', '\n']
 
+    def ender(self, ch):
+        return self.whitespace(ch) or self.special(ch)
+
     def get_token(self):
         t = self.do_get_token()
-        #print("GET token:", t)
         return t
 
+    def next_ch(self):
+        if self.pushed_char:
+            ch = self.pushed_char
+            self.pushed_char = None
+            return ch
+        return self.read_f()
+
+    def unread(self, ch):
+        self.pushed_char = ch
+
+    def number_or_word(self, s):
+        n = to_number(s)
+        if n != None:
+            return Token('number', n)
+        else:
+            return Token('word', s)
+ 
     def do_get_token(self):
         state = 'start'
         token = ''
         while True:
-            ch = self.read_f()
-            #print(f'ch: {ch} typech {type(ch)} state {state}')
+            ch = self.next_ch()
             if ch in ['', None]:
                 if state in ['sqstring', 'dqstring']:
                     return Token('string', token)
                 if state in ['word']:
                     return Token('word', token)
                 if state == 'number':
-                    return Token('number', token)
-                #print("x get returning NONE")
+                    return self.number_or_word(token)
                 return None
+            elif state == 'start' and self.special(ch):
+                return Token('word', ch)
+
             elif state == 'start' and ch == ':':
                 token = ch
                 state = 'keyword'
             elif state == 'start' and ch in "+-0123456789":
                 token = ch
                 state = 'number'
-            elif state == 'start' and ch == '\\':
-                state = 'lcomment'
             elif state == 'lcomment' and ch == '\n':
                 state = 'start'
-            elif state == 'start' and ch == '(':
+            elif state == 'start' and ch == '/':
                 state = 'icomment'
-            elif state == 'icomment' and ch == ')':
+            elif state == 'icomment' and ch in ['\n', '/']:
                 state = 'start'
             elif state == 'start' and self.whitespace(ch):
                 continue
@@ -119,19 +150,17 @@ class TokenStream:
             elif state == 'start':
                 state = 'word'
                 token += ch
-            elif state  == 'number' and self.whitespace(ch):
-                n = to_number(token)
-                if n != None:
-                    #print("returning number", n)
-                    return Token('number', n)
-                else:
-                    return Token('word', token)
-            elif state  == 'word' and self.whitespace(ch):
+            elif state  == 'number' and self.ender(ch):
+                self.unread(ch)
+                return self.number_or_word(token)
+            elif state  == 'word' and self.ender(ch):
+                self.unread(ch)
                 return Token('word', token)
             elif state  == 'sqstring' and self.whitespace(ch):
+                self.unread(ch)
                 return Token('string', token)
-            elif state == 'keyword' and self.whitespace(ch):
-                state = 'start'
+            elif state == 'keyword' and self.ender(ch):
+                self.unread(ch)
                 if token in [':']:
                     return Token('word', token)
                 return Token('keyword', token)
@@ -139,6 +168,11 @@ class TokenStream:
                 token += ch
 
 class MacroTokenStream:
+    """
+    MacroTokenStream adds a bit of preprocessing to a regular
+    token stream. Specifically it turns tokens of the form #aa.bb.cc
+    into a sequence of tokens of the form <. aa 'bb 'cc .>.
+    """
     def __init__(self, stream):
         self.stream = stream
         self.tokens = []
@@ -166,7 +200,6 @@ class MacroTokenStream:
         return None
 
 def file_token_stream(f):
-    #print("file token stream:", f)
     return MacroTokenStream(TokenStream(lambda : f.read(1)))
 
 def string_token_stream(s):
@@ -179,7 +212,6 @@ def prompt_token_stream(prompt_f):
 
 if __name__ == "__main__":
     x = 0
-    
     def pmt():
         global x
         x += 1

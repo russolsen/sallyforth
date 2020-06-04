@@ -1,8 +1,8 @@
-
+'io namespace
 : open { builtins/open  !!1 }
 : close { <. $? 'close .> !!0 drop  }
 
-: read-file (path -- contents) { open dup <. $? 'read .> !!0 swap close }
-: read-lines (path -- contents) { open dup <. $? 'readlines .> !!0 swap close }
+: read-file  { open dup <. $? 'read .> !!0 swap close }
+: read-lines  { open dup <. $? 'readlines .> !!0 swap close }
 
-: read-line (prompt -- input-line) { builtins/input !!1 }
+: read-line  { builtins/input !!1 }

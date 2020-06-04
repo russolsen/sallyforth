@@ -1,5 +1,5 @@
 
-\ Test stack and arithmetic.
+/ Test stack and arithmetic.
 
 reset stackdepth 0 = "Stack starts empty." assert
 reset 111 stackdepth 1 = "One item on stack" assert
@@ -27,7 +27,7 @@ reset 1 2 3 reset stackdepth 0 = "Reset empties the stack." assert
 1 ++ 2 = "1++ is two." assert
 0 -- -1 = "0-- is -1." assert
 
-\ Booleans
+/ Booleans
 
 true "True is true." assert
 true not false = "Not true is false" assert
@@ -43,7 +43,7 @@ true false and not "T and F is F." assert
 false true and not "F and T is F." assert
 false false and not "F and F is F." assert
 
-\ Secondary words
+/ Secondary words
 
 : push8 8
 push8 8 = "A word can push a number." assert
@@ -54,7 +54,7 @@ push8-again 8 = "A word can call another word." assert
 : push64 { push8 push8 * }
 push64 64 = "A word can use primitive and sec words." assert
 
-\ Logic
+/ Logic
 
 : 1-if-true { if { 1 } }
 
@@ -66,17 +66,17 @@ reset false 1-if-true stackdepth 0 = "if does not fire on false." assert
 reset true 1-or-2 1 = "True part of ifelse fires." assert
 reset false 1-or-2 2 = "False part of ifelse fires." assert
 
-\ built in functions
+/ built in functions
 
 123 str "123" = "Str turns numbers into strings." assert
 "abcd" len 4 = "Len gets length of strings." assert
 
-\ Name lookup and calls
+/ Name lookup and calls
 
 "12" <. builtins 'len .> !!1 2 = "Can use bracket dot notation." assert
 "12" builtins/len !!1 2 = "Can use sharp lookup notation." assert
 
-\ Lists
+/ Lists
 
 0 ->list len 0 = "->list with a lenght of 0 gives you empty list." assert
 44 1 ->list len 1 = "->list with a lenght of 1 gives you 1 list." assert
@@ -93,9 +93,11 @@ reset false 1-or-2 2 = "False part of ifelse fires." assert
 [ 1 ] empty? not "Empty? knows a non-empty list." assert
 [ 1 2 ] empty? not "Empty? knows a non-empty list." assert
 
-\ Loop
+/ Loop
 
-: test-while ( n -- ) { -999 swap while { dup zero? } { -- } -888 }
+'While p
+
+: test-while { -999 swap while { dup zero? } { -- } -888 }
 
 5 test-while 3 ->list [ -999 0 -888 ] "While loop works" assert
 
@@ -103,6 +105,6 @@ reset false 1-or-2 2 = "False part of ifelse fires." assert
 
 888 zero-trip-while 888 = "While should handle zero trip case." assert
 
-\ Strings
+/ Strings
 
 reset "abc.def.h" dot-split [ "abc" "def" "h" ] = "Dot split splits" assert

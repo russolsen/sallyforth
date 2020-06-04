@@ -5,7 +5,7 @@ from unique import Unique
 def w_bounded_list(forth):
     """Create a list from delimted values on the stack.
     [list]
-    (marker a b c marker -- [a b c]
+    (marker a b c marker -- [a b c])
     """
     marker = forth.stack.pop()
     l = []

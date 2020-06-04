@@ -12,15 +12,12 @@ class word:
             f.forth_name = self.name
         else:
             f.forth_name = f.__name__
-        f.forth_primitive = True
-        f.forth_inline = False
-        f.forth_immediate = self.immediate
+        f.immediate = self.immediate
         return f
 
 def wrap_native_f(f, n, hasreturn):
     if n > 0 and hasreturn:
         def wrapper(forth):
-            print("both")
             args = []
             for i in range(n):
                 args.append(forth.stack.pop())
@@ -37,7 +34,6 @@ def wrap_native_f(f, n, hasreturn):
             forth.stack.push(f(*args))
     else:
         def wrapper(forth):
-            print("nothing")
             f()
     return wrapper
 
@@ -50,9 +46,8 @@ def determine_nargs(f, n):
 def native_word(f, name=None, nargs=None, hasreturn=False):
     nargs = determine_nargs(f, nargs)
     f = wrap_native_f(f, nargs, hasreturn)
-    f.forth_type = 'wrapped_primitive'
-    f.forth_inline = False
-    f.forth_immediate = False
+    f.operation_type = 'wrapped_primitive'
+    f.immediate = False
     return f
    
 

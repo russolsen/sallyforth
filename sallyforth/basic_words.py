@@ -1,16 +1,34 @@
 import tokenstream as ts
 from wrappers import noop
+from namespace import Namespace
 from util import word, native_word
 from unique import Unique
+import python_compiler as pc
+import inliner
 import importlib
 from pprint import pprint
+
+@word()
+def compile(forth):
+    name = forth.stack.pop()
+    var = forth.ns[name]
+    word_f = var.value
+    new_f = pc.compile_word_f(word_f, name)
+    forth.set(name, new_f)
+
+@word()
+def inline(forth):
+    name = forth.stack.pop()
+    var = forth.ns[name]
+    word_f = var.value
+    new_f = inliner.compile_word_f(word_f, name)
+    forth.set(name, new_f)
 
 @word()
 def dynamic(forth):
     name = forth.stack.pop()
     isdyn = forth.stack.pop()
     var = forth.ns[name]
-    print(f'name: {name} var: {var} dyn: {isdyn}')
     var.dynamic = isdyn
 
 @word()
@@ -25,6 +43,11 @@ def native(forth):
     print('name', name)
     wrapped_f = native_word(native_f, name, n, has_return)
     forth.set(name, wrapped_f)
+
+@word("go!")
+def exec_word(forth):
+    func = forth.stack.pop()
+    func(forth)
 
 @word("function")
 def function_word(forth):
@@ -54,13 +77,11 @@ def readtoken(forth):
 def w_call(forth):
     func = forth.stack.pop()
     args = forth.stack.pop()
-    #print('f', f, 'args', args)
     try:
         result = func(*args)
     except:
         print(f'Error executing {func}({args})')
         raise
-    #print('result', result)
     forth.stack.push(result)
 
 @word()
@@ -144,27 +165,47 @@ def splat(forth):
 def stack(forth):
     print(forth.stack)
 
-@word()
-def ns(forth):
+@word('debug-ns')
+def debug_ns(forth):
+    print('debug ns')
     print(forth.ns.name)
+    pprint(forth.ns.includes)
     pprint(forth.ns.contents)
+
+@word('*ns*')
+def star_ns_star(forth):
+    forth.stack.push(forth.ns)
+
+@word('new-ns')
+def new_ns(forth):
+    name = forth.stack.pop()
+    core = forth.namespaces['core']
+    namespace = Namespace(name, [core])
+    forth.namespaces[name] = namespace
+
+@word('include')
+def include_ns(forth):
+    name = forth.stack.pop()
+    included = forth.namespaces[name]
+    forth.ns.include_ns(included)
+
+@word('set-ns')
+def set_ns_word(forth):
+    name = forth.stack.pop()
+    forth.set_ns(name)
+
+@word('ns?')
+def ns_question(forth):
+    name = forth.stack.pop()
+    forth.stack.push(name in forth.namespaces)
 
 @word(':', True)
 def colon(forth):
     name = forth.stream.get_token().value
     body = forth.compile_next()
     forth.set(name, body)
-    forth.set_constant('*last-word*', name)
+    forth.core.set_constant('*last-word*', name)
     return noop
-
-@word()
-def inline(forth):
-    name = forth.stack.pop()
-    print('name', name)
-    var = forth.ns[name]
-    value = var.value
-    if not value.forth_primitive:
-        value.forth_inline = True
 
 @word()
 def current_stream(forth):
@@ -196,27 +237,26 @@ def word_bang(forth):
 def w_while(forth):
     cond = forth.compile_next()
     body = forth.compile_next()
+    #print("cond:", cond)
+    #print("body", body)
     def dowhile(xforth):
         b = fresult(xforth, cond)
         while b:
             body(xforth)
             b = fresult(xforth, cond)
-    dowhile.forth_inline = False
-    dowhile.forth_primitive = True
-    dowhile.forth_immediate = False
+    dowhile.operation_type = 'while'
+    dowhile.immediate = False
     return dowhile
 
 @word('if', True)
 def w_if(forth):
     compiled = forth.compile_next()
-    print("compiled", compiled)
     def doif(forth):
         value = forth.stack.pop()
         if value:
             compiled(forth)
-    doif.forth_inline = False
-    doif.forth_primitive = True
-    doif.forth_immediate = False
+    doif.operation_type = 'if'
+    doif.immediate = False
     return doif
 
 @word('ifelse', True)
@@ -229,7 +269,6 @@ def ifelse(forth):
             compiled_true(forth)
         else:
             compiled_false(forth)
-    doif.forth_inline = False
-    doif.forth_primitive = True
-    doif.forth_immediate = False
+    doif.operation_type = 'ifelse'
+    doif.immediate = False
     return doif

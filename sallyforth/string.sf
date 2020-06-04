@@ -1,9 +1,11 @@
-: split  (delimit str -- tokens) {
+/ split  (delimit str -- tokens) 
+: split {
   2 ->list
   <. builtins/str 'split .>
   !! 
 }
 
-: dot-split (str -- tokens) { "." swap split }
+/ dot-split (str -- tokens) 
+: dot-split { "." swap split }
 
 

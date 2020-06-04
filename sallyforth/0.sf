@@ -1,6 +1,4 @@
-"Hello from 0.sf" p
-
-\ Pull in libs.
+/ Pull in libs.
 
 "builtins" load
 "time" load
@@ -13,64 +11,66 @@
 'builtins import
 'time import
 
-\ Basic aliases
+/ Basic aliases
 
-: ->inline  { *last-word* inline }
-: ->static  { false *last-word* dynamic }
-: ->dynamic { true *last-word* dynamic }
+: ->compile  { *last-word* compile }
+: ->inline   { *last-word* inline }
+: ->optimize { ->inline ->compile }
+: ->static   { false *last-word* dynamic }
+: ->dynamic  { true *last-word* dynamic }
 
-: -- { 1 - }           ->inline
-: ++ { 1 + }           ->inline
-: =0 { 0 = }           ->inline
-: pos?  { 0 > }        ->inline
-: neg?  { 0 < }        ->inline
-: zero? { 0 = }        ->inline
-: drop1 { drop }       ->inline
-: drop2 { drop drop }  ->inline
-: drop3 { drop2 drop } ->inline
+: -- { 1 - }           ->compile
+: ++ { 1 + }           ->compile
+: =0 { 0 = }           ->compile
+: pos?  { 0 > }        ->compile
+: neg?  { 0 < }        ->compile
+: zero? { 0 = }        ->compile
+: drop1 { drop }       ->compile
+: drop2 { drop drop }  ->compile
+: drop3 { drop2 drop } ->compile
 
-\ List making.
+/ List making.
 
 unique 'list-marker =!
-: [ list-marker
-: ] { list-marker [list] }
-: [] { [ ] }
+: [ list-marker             ->compile
+: ] { list-marker [list] }  ->compile
+: [] { [ ] }                ->compile
 
 unique 'map-marker =!
-: {{ map-marker 
-: }} { map-marker [list] list->map }
-: {{}} { {{ }} }
+: <<= map-marker                       ->compile
+: =>> { map-marker [list] list->map }  ->compile
+: <<=>> { <<= =>> }                    ->compile
 
 
-\ Spelunk thru objects and properties.
+/ Spelunk thru objects and properties.
 
 : <. [
 : .> { ] @@ }
 : $? swap
 
-\ Set the interactive prompt.
 
-: *prompt* "sallySh> "
-
-\ Function calling.
+/ Function calling.
 
 : !!0 { [] swap !! }
 : !!1 { swap 1 ->list swap !! }
 : !!2 { mbt 2 ->list swap !! }
 
-: getattr ( obj attr -- attr-value ) {
+/ obj attr -- attr-value 
+: getattr  {
   swap 2 ->list builtins/getattr !! 
 }
 
-: setattr ( obj attr value -- ) {
+/ obj attr value
+: setattr {
   bmt 3 ->list builtins/setattr
 }
 
-: .!! (obj args method-name -- result) {
+/ obj args method-name -- result
+: .!! {
   tbm getattr !!
 }
 
-\ Handy utilities
+/ Handy utilities
 
 : str { builtins/str !!1 }
 : type { builtins/type !!1 }
@@ -78,7 +78,12 @@ unique 'map-marker =!
 : sleep { time/sleep !!1 drop }
 : ctime { time/ctime !!0 }
 
-: assert ( bool msg -- ) {
+/ Set the interactive prompt.
+
+: *prompt* { <. *ns* 'name .> str " sf>> " + }
+
+/ bool msg --
+: assert {
   dup
   p
   swap
@@ -87,7 +92,24 @@ unique 'map-marker =!
   { builtins/AssertionError !!1 raise }
 }
 
-\ Other startup files.
+/ Namespaces
+
+: namespaces { <. forth 'namespaces .> }
+
+: namespace { 
+  dup ns? ifelse
+  { stack set-ns }
+  { dup new-ns set-ns }
+}
+
+: require {
+  dup dup
+  '.sf + source
+  ns? not ifelse { "Namespace " .  . " not loaded." p }
+                 { "Namespace " .  . " loaded." p }  
+}
+  
+/ Other startup files.
 
 *sallyforth-dir* "/"  "io.sf"     + + source
 *sallyforth-dir* "/"  "list.sf"   + + source

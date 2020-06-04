@@ -1,6 +1,9 @@
 from collections.abc import Sequence
 
 class Stack(Sequence):
+    """
+    A Stack is a traditional last in, first out data stack.
+    """
     def __init__(self):
         self.contents = []
 
