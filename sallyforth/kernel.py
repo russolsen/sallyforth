@@ -2,10 +2,7 @@ import sys
 import os
 from stack import Stack
 from namespace import Namespace
-#import basic_words
-#import stack_words
-#import operator_words
-#import data_words
+from kword import Keyword
 import tokenstream as ts
 import threaded_compiler as compiler
 from wrappers import value_f
@@ -54,6 +51,7 @@ class Forth:
         sally_dir = os.path.dirname(os.path.abspath(__file__))
         self.set_constant('*sallyforth-dir*', sally_dir)
         self.ns.import_from_module('basic_words')
+        self.ns.import_from_module('namespace_words')
         self.ns.import_from_module('stack_words')
         self.ns.import_from_module('operator_words')
         self.ns.import_from_module('data_words')
@@ -94,7 +92,8 @@ class Forth:
 
     def compile_next(self, current_token=None):
         """
-        Compile the next token, either the one passed in or the next one on the current token stream.
+        Compile the next token, either the one passed in 
+        or the next one on the current token stream.
         """
         return compiler.compile_next(self, self.stream, current_token)
 
@@ -132,6 +131,19 @@ class Forth:
         """
         self.eval_string(s)
         return self.stack.pop()
+
+    def eval_object(self, o):
+        if isinstance(o, [int, str, Keyword, float]):
+            self.stack.push(o)
+        elif callable(o):
+            o(self)
+        else:
+            print(o, "??")
+            raise ValueError()
+
+    def eval_objects(self, l):
+        for o in l:
+            self.eval_object(l)
 
     def lookup(self, name):
         """

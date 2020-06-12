@@ -7,6 +7,7 @@ def value_f(value):
     push_constant.immediate = False
     push_constant.operation_type = 'pushv'
     push_constant.value = value
+    push_constant.__doc__ = value.__doc__
     return push_constant
 
 def inner_f(contents):

@@ -26,7 +26,7 @@ def print_ast(name):
                 keywords=[]))
     return r
 
-def compile_f(contents, name):
+def compile_f(contents, attributes, doc, name):
     d = locals().copy()
     exprs = []
     for i, val in enumerate(contents):
@@ -39,7 +39,9 @@ def compile_f(contents, name):
     code = compile(m, 'source', 'exec')
     exec(code, d)
     f = d['generated_function']
-    f.immediate = False
+    if attributes:
+        f.__dict__ = attributes.copy()
+    f.__doc__ = doc
     f.operation_type = 'compiled'
     f.name = name
     f.contents = contents
@@ -57,5 +59,5 @@ def compile_word_f(f, name=None):
     """
     contents = getattr(f, 'contents', None)
     if contents and len(contents) > 1:
-        return compile_f(contents, name)
+        return compile_f(contents, f.__dict__, f.__doc__, name)
     return f

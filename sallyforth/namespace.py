@@ -64,9 +64,7 @@ class Namespace:
 
     def import_from_module(self, module_name):
         """
-        Import all of the word defining functions in
-        module m whose function names start with prefix
-        into this namespace. Removes the prefix.
+        Import all of the word defining functions in module m.
         """
         m = load_module(module_name)
         names = dir(m)
@@ -74,6 +72,8 @@ class Namespace:
             value = getattr(m, name)
             if get_attribute(value, 'forth_word'):
                 forth_name = value.forth_name or name
+                if forth_name in self:
+                    print("Warning: redefining", forth_name)
                 var = self.set(forth_name, value, False)
 
     def import_native_module(self, m, alias=None):
@@ -120,8 +120,8 @@ class Namespace:
                 return True
         return False
 
-    def __delattr__(self, key):
-        return self.contents.__delattr__(key)
+    def __delitem__(self, key):
+        return self.contents.__delitem__(key)
 
     def __setitem__(self, key, x):
         return self.set(key, x)

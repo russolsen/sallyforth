@@ -1,4 +1,5 @@
 import io
+from kword import Keyword
 
 def to_number(token):
     try:
@@ -40,6 +41,9 @@ class Token:
 
     def isnumber(self):
         return self.kind == 'number'
+
+    def iscomment(self):
+        return self.kind == 'comment'
 
     def __repr__(self):
         return str(self)
@@ -90,8 +94,15 @@ class TokenStream:
     def ender(self, ch):
         return self.whitespace(ch) or self.special(ch)
 
-    def get_token(self):
+    def get_token(self, return_comment=False):
+        #print("ret comment:", return_comment)
+        if return_comment:
+            return self.do_get_token()
+
         t = self.do_get_token()
+        while t and t.iscomment():
+            t = self.do_get_token()
+
         return t
 
     def next_ch(self):
@@ -121,24 +132,26 @@ class TokenStream:
                     return Token('string', token)
                 if state in ['word']:
                     return Token('word', token)
+                if state == 'comment':
+                    return Token('comment', token)
+                if state == 'keyword':
+                    return Token('keyword', Keyword(token))
                 if state == 'number':
                     return self.number_or_word(token)
                 return None
             elif state == 'start' and self.special(ch):
                 return Token('word', ch)
-
             elif state == 'start' and ch == ':':
                 token = ch
                 state = 'keyword'
             elif state == 'start' and ch in "+-0123456789":
                 token = ch
                 state = 'number'
-            elif state == 'lcomment' and ch == '\n':
-                state = 'start'
             elif state == 'start' and ch == '/':
-                state = 'icomment'
-            elif state == 'icomment' and ch in ['\n', '/']:
-                state = 'start'
+                token = ''
+                state = 'comment'
+            elif state == 'comment' and ch in ['\n', '/']:
+                return Token('comment', token) 
             elif state == 'start' and self.whitespace(ch):
                 continue
             elif state == 'start' and ch == '"':
@@ -163,8 +176,8 @@ class TokenStream:
                 self.unread(ch)
                 if token in [':']:
                     return Token('word', token)
-                return Token('keyword', token)
-            elif state in ['word', 'dqstring', 'sqstring', 'number', 'keyword']:
+                return Token('keyword', Keyword(token))
+            elif state in ['word', 'dqstring', 'sqstring', 'number', 'keyword', 'comment']:
                 token += ch
 
 class MacroTokenStream:
@@ -177,8 +190,8 @@ class MacroTokenStream:
         self.stream = stream
         self.tokens = []
 
-    def get_more_tokens(self):
-        raw_token = self.stream.get_token()
+    def get_more_tokens(self, return_comment):
+        raw_token = self.stream.get_token(return_comment)
         if raw_token \
            and raw_token.isword() \
            and raw_token.value[0] == '#':
@@ -192,9 +205,9 @@ class MacroTokenStream:
         else:
             self.tokens.append(raw_token)
 
-    def get_token(self):
+    def get_token(self, return_comment=False):
         if len(self.tokens) == 0:
-            self.get_more_tokens()
+            self.get_more_tokens(return_comment)
         if len(self.tokens):
             return self.tokens.pop()
         return None
@@ -220,7 +233,8 @@ if __name__ == "__main__":
     pis = PromptInputStream(pmt)
     ts = TokenStream(pis.getc)
     
-    result = ts.get_token()
+    result = ts.get_token(True)
+    #print("result", result)
     while result:
         print("result:", result)
-        result = ts.get_token()
+        result = ts.get_token(True)

@@ -30,7 +30,7 @@
   1 ->list * 
 } ->compile
 
-: len { builtins/len !!1 }
+: len { builtins/len !!1 } builtins/len __doc__ ->doc
 
 : empty? { len zero? }
   
@@ -38,8 +38,8 @@
 : rrest  { rest rest }      ->compile
 : rrrest { rest rest rest } ->compile
 
-: ffirst  { first first }       ->compile
-: fffirst { first first first } ->compile
+: ffirst  /l -- first-item-of-first-item/ { first first }       ->compile
+: fffirst /l -- f-of-f-of-f-of-f/ { first first first } ->compile
 
 : append  {
   dup tbm 

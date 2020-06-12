@@ -10,8 +10,9 @@ class Keyword(UserString):
         value = value[1::]
         UserString.__init__(self, value)
 
-    def __call__(self, d):
-        return d[self]
+    def __call__(self, forth):
+        d = forth.stack.pop()
+        forth.stack.push(d[self])
 
     def __repr__(self):
         return ':' + str(self)

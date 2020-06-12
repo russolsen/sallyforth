@@ -2,9 +2,10 @@ def get_attribute(x, name):
     return getattr(x, name, None)
 
 class word:
-    def __init__(self, name=None, immediate=False):
+    def __init__(self, name=None, immediate=False, doc=None):
         self.name = name
         self.immediate = immediate
+        self.doc = doc
 
     def __call__(self, f):
         f.forth_word = True
@@ -12,6 +13,8 @@ class word:
             f.forth_name = self.name
         else:
             f.forth_name = f.__name__
+        if self.doc:
+            f.__doc__ = self.doc
         f.immediate = self.immediate
         return f
 

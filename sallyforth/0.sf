@@ -19,6 +19,7 @@
 : ->static   { false *last-word* dynamic }
 : ->dynamic  { true *last-word* dynamic }
 
+
 : -- { 1 - }           ->compile
 : ++ { 1 + }           ->compile
 : =0 { 0 = }           ->compile
@@ -37,9 +38,14 @@ unique 'list-marker =!
 : [] { [ ] }                ->compile
 
 unique 'map-marker =!
-: <<= map-marker                       ->compile
-: =>> { map-marker [list] list->map }  ->compile
-: <<=>> { <<= =>> }                    ->compile
+
+: <<= /Start a map/ map-marker ->compile
+
+: =>> /Complete a map/ {
+  map-marker [list] list->map 
+} ->compile
+
+: <<=>> /Push an empty map/ { <<= =>> } ->compile
 
 
 / Spelunk thru objects and properties.
@@ -51,9 +57,9 @@ unique 'map-marker =!
 
 / Function calling.
 
-: !!0 { [] swap !! }
-: !!1 { swap 1 ->list swap !! }
-: !!2 { mbt 2 ->list swap !! }
+: !!0 /Call a 0 arg native function/ { [] swap !! }
+: !!1 /Call a 1 arg native function/ { swap 1 ->list swap !! }
+: !!2 /Call a 2 arg native function/ { mbt 2 ->list swap !! }
 
 / obj attr -- attr-value 
 : getattr  {
@@ -109,6 +115,11 @@ unique 'map-marker =!
                  { "Namespace " .  . " loaded." p }  
 }
   
+/ Documentartion
+
+: ->doc { *last-word* setdoc }
+: __doc__ { <. $? '__doc__ .> }
+
 / Other startup files.
 
 *sallyforth-dir* "/"  "io.sf"     + + source
