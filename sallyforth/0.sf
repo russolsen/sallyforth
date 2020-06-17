@@ -83,6 +83,7 @@ unique 'map-marker =!
 : callable? { builtins/callable !!1 }
 : sleep { time/sleep !!1 drop }
 : ctime { time/ctime !!0 }
+: now { time/time !!0 }
 
 / Set the interactive prompt.
 
@@ -114,8 +115,13 @@ unique 'map-marker =!
   ns? not ifelse { "Namespace " .  . " not loaded." p }
                  { "Namespace " .  . " loaded." p }  
 }
+
+/ Time execution
+
+: time[ { now }
+: ]time { now swap - }
   
-/ Documentartion
+/ Documentation
 
 : ->doc { *last-word* setdoc }
 : __doc__ { <. $? '__doc__ .> }

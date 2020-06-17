@@ -16,3 +16,6 @@ class Keyword(UserString):
 
     def __repr__(self):
         return ':' + str(self)
+
+    def __str__(self):
+        return ':' + self.data
