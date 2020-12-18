@@ -1,57 +1,15 @@
 import imp
 import importlib
-import ast
+#import ast
 import copy
 from pprint import pprint
 from util import word
 #from ast_utils import dump
 
-class FunctionVisitor(ast.NodeVisitor):
-    def __init__(self):
-        self.index = {}
-    def visit_FunctionDef(self, node):
-        self.index[node.name] = node
-
 def find_module(name):
     minfo = imp.find_module(name)[0]
     return minfo.name
 
-def parse_module(path):
-    with open(path) as f:
-        text = f.read()
-    tree = ast.parse(text)
-    ast.fix_missing_locations(tree)
-    return tree
-
-def index_functions(tree):
-    fv = FunctionVisitor()
-    fv.visit(tree)
-    return fv.index
-
-def function_index(module_name):
-    path = find_module(module_name)
-    tree = parse_module(path)
-    return index_functions(tree)
-
-def add_ast(m, function_index):
-    names = dir(m)
-    for name in names:
-        if name in function_index:
-            f = getattr(m, name)
-            f.ast = function_index[name]
-    return m
-
-def load_module(name):
-    """
-    Loads and returns the module with name.
-    The difference is that this function also adds
-    the Python ast to each function in the module
-    along the way.
-    """
-    findex = function_index(name)
-    m = importlib.import_module(name)
-    add_ast(m, findex)
-    return m
 
 def build_composite_function(function_asts, name='generated_function'):
     print("*** name:", name)

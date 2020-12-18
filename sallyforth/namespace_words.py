@@ -1,7 +1,7 @@
 from wrappers import noop
 from namespace import Namespace
 from util import word, native_word
-import python_compiler as pc
+#import python_compiler as pc
 import inliner
 import importlib
 from pprint import pprint
@@ -82,7 +82,11 @@ def w_import(forth):
 @word(doc='Import a module that defines forth words: modname -- ')
 def lexicon(forth):
     name = forth.stack.pop()
-    forth.ns.import_from_module(name)
+    m = __import__(name)
+    ns = m.__ns__
+    forth.namespaces
+    ns.parent = forth.namespaces['core']
+    forth.namesapces[name] = ns
 
 @word('source', doc='Read an execute a file full of forth code: path --')
 def w_source(forth):

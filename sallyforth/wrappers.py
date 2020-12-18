@@ -1,6 +1,3 @@
-import ast
-import ast_utils
-
 def value_f(value):
     def push_constant(f):
         f.stack.push(value)
@@ -64,5 +61,5 @@ def inner_f3(contents):
 
 def noop(value):
     pass
-noop.immediate = False
-noop.operation_type = 'noop'
+##noop.immediate = False
+##noop.operation_type = 'noop'

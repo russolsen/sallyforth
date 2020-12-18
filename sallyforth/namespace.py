@@ -1,6 +1,6 @@
 from util import get_attribute
 from wrappers import value_f
-from module_loader import load_module
+##from module_loader import load_module
 
 class Var:
     """
@@ -35,7 +35,7 @@ class Var:
         return self.value.operation_type
 
     def __str__(self):
-        return f' Var({self.name}/{self.dynamic}::{self.value}) '
+        return ' Var(' + self.name + "/" + str(self.dynamic) + '::' + str(self.value)
 
     def __repr__(self):
         return str(self)
@@ -62,31 +62,31 @@ class Namespace:
     def alias(self, new_name, existing_name):
         self.contents[new_name] = self.contents[existing_name]
 
-    def import_from_module(self, module_name):
-        """
-        Import all of the word defining functions in module m.
-        """
-        m = load_module(module_name)
-        names = dir(m)
-        for name in names:
-            value = getattr(m, name)
-            if get_attribute(value, 'forth_word'):
-                forth_name = value.forth_name or name
-                if forth_name in self:
-                    print("Warning: redefining", forth_name)
-                var = self.set(forth_name, value, False)
-
-    def import_native_module(self, m, alias=None):
-        if not alias:
-            alias = m.__name__
-            alias = alias.replace(".", "/")
-    
-        names = dir(m)
-        for name in names:
-            localname = f'{alias}/{name}'
-            val = getattr(m, name)
-            var = self.set(localname, value_f(val), False)
-
+##    def import_from_module(self, module_name):
+##        """
+##        Import all of the word defining functions in module m.
+##        """
+##        m = load_module(module_name)
+##        names = dir(m)
+##        for name in names:
+##            value = getattr(m, name)
+##            if get_attribute(value, 'forth_word'):
+##                forth_name = value.forth_name or name
+##                if forth_name in self:
+##                    print("Warning: redefining", forth_name)
+##                var = self.set(forth_name, value, False)
+##
+##    def import_native_module(self, m, alias=None):
+##        if not alias:
+##            alias = m.__name__
+##            alias = alias.replace(".", "/")
+##    
+##        names = dir(m)
+##        for name in names:
+##            localname = alias + '/' + name
+##            val = getattr(m, name)
+##            var = self.set(localname, value_f(val), False)
+##
     def set(self, key, value, dynamic=True):
         if key not in self.contents:
             var = Var(key, value, dynamic)
@@ -141,4 +141,4 @@ class Namespace:
         raise KeyError(key)
 
     def __str__(self):
-        return f'Namespace({self.name})'
+        return self.name

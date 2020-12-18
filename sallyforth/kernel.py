@@ -55,7 +55,7 @@ class Forth:
         self.ns.import_from_module('stack_words')
         self.ns.import_from_module('operator_words')
         self.ns.import_from_module('data_words')
-        self.eval_file(f'{sally_dir}/0.sf')
+        self.eval_file(sally_dir + '/0.sf')
         self.ns = user
 
     def set_constant(self, name, value):
@@ -157,7 +157,7 @@ if __name__ == "__main__":
     def pmt():
         global x
         x += 1
-        return f'Yes{x}>> '
+        return 'Yes>> '
     
     pis = ts.PromptInputStream(pmt)
     tstream = ts.TokenStream(pis.getc)

@@ -1,9 +1,9 @@
 import os
 import sys
-import atexit
-import readline
-import traceback
-import argparse
+##import atexit
+##import readline
+##import traceback
+#import argparse
 from kernel import Forth
 from tokenstream import prompt_token_stream
 
@@ -24,19 +24,6 @@ class Completer:
             return self.matching_words[index]
         except IndexError:
             return None
-
-def setup_readline(history_path, f):
-    completer = Completer(f)
-    try:
-        readline.read_history_file(history_path)
-    except FileNotFoundError:
-        pass
-    readline.parse_and_bind('tab: complete')
-    readline.set_completer_delims(" \t\n()[{]}\\|;:\"',")
-    readline.set_completer(completer.complete)
-    def save_history():
-        readline.write_history_file(history_path)
-    atexit.register(save_history)
 
 def setup_forth(run_startups, additional_scripts):
     f = Forth()
@@ -63,7 +50,7 @@ def repl(f):
                 else:
                     f.eval_string(line)
             except:
-               traceback.print_exc()
+                print("Exception!")
         except KeyboardInterrupt:
             print()
 
@@ -75,8 +62,7 @@ def process_args():
     return (not args.nostartup), args.scripts
 
 if __name__ == '__main__':
-    run_startup, scripts = process_args()
-    f = setup_forth(run_startup, scripts)
-    setup_readline(hist_file, f)
+    ##run_startup, scripts = process_args()
+    f = setup_forth(True, [])
     repl(f)
     print('Bye!')

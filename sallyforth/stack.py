@@ -1,6 +1,7 @@
-from collections.abc import Sequence
+#from collections.abc import Sequence
 
-class Stack(Sequence):
+#class Stack(Sequence):
+class Stack:
     """
     A Stack is a traditional last in, first out data stack.
     """
